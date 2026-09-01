@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">個人財務記帳工作台 // SYS-LEDGER</title>
+
+    <!-- Strictly Local Offline CSS Resources (No External CDN) -->
+    <link rel="stylesheet" th:href="@{/lib/bootstrap-5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/lib/bootstrap-5.3.3/css/bootstrap-icons.css}">
+    <link rel="stylesheet" th:href="@{/css/swiss-style.css}">
+</head>
+<body class="swiss-body">
+
+    <div id="app" v-cloak>
+        <!-- Top Navigation Bar -->
+        <nav class="swiss-navbar">
+            <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+                <a href="/ledger" class="swiss-brand">
+                    <span class="swiss-brand-badge">SYS</span>
+                    <span>SWISS LEDGER</span>
+                    <span class="text-muted fw-normal fs-6 ms-2 d-none d-md-inline">// PERSONAL FINANCE</span>
+                </a>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div class="swiss-mono small d-none d-sm-block">
+                        <span class="text-muted">USER:</span>
+                        <strong class="text-dark ms-1">{{ currentUser.displayName || currentUser.username }}</strong>
+                    </div>
+
+                    <button class="btn btn-sm btn-swiss-outline" @click="openCategoryModal">
+                        <i class="bi bi-tags me-1"></i> 分類管理
+                    </button>
+
+                    <button class="btn btn-sm btn-swiss-danger" @click="handleLogout">
+                        <i class="bi bi-power me-1"></i> 登出
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="container-fluid px-4 py-4">
+            
+            <!-- Header & Month Selector -->
+            <div class="row align-items-end mb-4">
+                <div class="col-md-6">
+                    <span class="swiss-tag">SYS-LEDGER // 01</span>
+                    <h1 class="swiss-title h3 mb-0">DAILY ACCOUNTING WORKBENCH</h1>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <div class="d-inline-flex align-items-center gap-2 bg-white border border-dark p-1">
+                        <button class="btn btn-sm btn-light border-0 fw-bold" @click="changeMonth(-1)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <div class="px-2 swiss-mono fw-bold">
+                            {{ currentYear }} 年 {{ currentMonth.toString().padStart(2, '0') }} 月
+                        </div>
+                        <button class="btn btn-sm btn-light border-0 fw-bold" @click="changeMonth(1)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <button class="btn btn-sm btn-swiss-dark ms-1" @click="resetToCurrentMonth">
+                            本月
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Summary Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="swiss-stat-card swiss-stat-income">
+                        <div class="swiss-stat-label">
+                            <i class="bi bi-arrow-down-left-circle me-1"></i> TOTAL INCOME // 當月總收入
+                        </div>
+                        <div class="swiss-stat-value">
+                            + NT$ {{ formatAmount(summary.totalIncome) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="swiss-stat-card swiss-stat-expense">
+                        <div class="swiss-stat-label">
+                            <i class="bi bi-arrow-up-right-circle me-1"></i> TOTAL EXPENSE // 當月總支出
+                        </div>
+                        <div class="swiss-stat-value">
+                            - NT$ {{ formatAmount(summary.totalExpense) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="swiss-stat-card swiss-stat-balance">
+                        <div class="swiss-stat-label">
+                            <i class="bi bi-wallet2 me-1"></i> NET BALANCE // 當月淨結餘
+                        </div>
+                        <div class="swiss-stat-value" :class="summary.netBalance >= 0 ? 'text-dark' : 'text-danger'">
+                            {{ summary.netBalance >= 0 ? '+' : '' }} NT$ {{ formatAmount(summary.netBalance) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Central Quick Entry Bar -->
+            <div class="swiss-quick-bar">
+                <div class="swiss-quick-title">
+                    <div>
+                        <i class="bi bi-lightning-charge-fill text-danger me-1"></i>
+                        <span>QUICK TRANSACTION ENTRY // 快速記帳</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-sm p-0 border-0 text-muted" 
+                                :class="{'fw-bold text-dark': !isSmartInputMode}"
+                                @click="isSmartInputMode = false">
+                            [結構化錄入]
+                        </button>
+                        <span class="text-muted">|</span>
+                        <button class="btn btn-sm p-0 border-0 text-muted" 
+                                :class="{'fw-bold text-dark': isSmartInputMode}"
+                                @click="isSmartInputMode = true">
+                            [自然語言解析]
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mode A: Structured Single-Line Input -->
+                <form v-if="!isSmartInputMode" @submit.prevent="handleCreateRecord" class="row g-2 align-items-center">
+                    <!-- Type Toggle -->
+                    <div class="col-12 col-sm-auto">
+                        <div class="type-toggle-group w-100">
+                            <button type="button" 
+                                    class="type-toggle-btn w-50"
+                                    :class="{ active: newRecord.recordType === 'EXPENSE', expense: newRecord.recordType === 'EXPENSE' }"
+                                    @click="setRecordType('EXPENSE')">
+                                支出
+                            </button>
+                            <button type="button" 
+                                    class="type-toggle-btn w-50"
+                                    :class="{ active: newRecord.recordType === 'INCOME', income: newRecord.recordType === 'INCOME' }"
+                                    @click="setRecordType('INCOME')">
+                                收入
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Category Selector -->
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <select class="form-select form-select-swiss" v-model="newRecord.categoryId" required>
+                            <option :value="null" disabled>-- 選擇分類 --</option>
+                            <option v-for="cat in filteredCategories" :key="cat.id" :value="cat.id">
+                                {{ cat.name }} {{ cat.isSystem ? '' : '(自訂)' }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-dark swiss-mono fw-bold">NT$</span>
+                            <input type="number" 
+                                   step="0.01" 
+                                   min="0.01"
+                                   class="form-control form-control-swiss swiss-mono" 
+                                   v-model.number="newRecord.amount" 
+                                   placeholder="金額" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Description Note -->
+                    <div class="col-12 col-md-3">
+                        <input type="text" 
+                               class="form-control form-control-swiss" 
+                               v-model.trim="newRecord.description" 
+                               placeholder="備註說明 (例: 午餐便當、生活用品)">
+                    </div>
+
+                    <!-- Date -->
+                    <div class="col-12 col-sm-6 col-md-2">
+                        <input type="date" 
+                               class="form-control form-control-swiss swiss-mono" 
+                               v-model="newRecord.recordDate" 
+                               required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="col-12 col-sm-6 col-md-auto ms-auto">
+                        <button type="submit" class="btn btn-swiss-primary w-100" :disabled="submitting">
+                            <i class="bi bi-plus-lg me-1"></i>
+                            <span>{{ submitting ? '記帳中...' : '入帳 (ENTER)' }}</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Mode B: Smart Natural Language Quick Parser -->
+                <form v-else @submit.prevent="handleQuickSmartRecord" class="row g-2 align-items-center">
+                    <div class="col-12 col-md-10">
+                        <input type="text" 
+                               class="form-control form-control-swiss" 
+                               v-model.trim="smartInputText" 
+                               placeholder="輸入自然語言記帳，例如：「午餐便當 120 飲食聚餐」或「薪水 45000 收入 2026-09-01」" 
+                               required>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-swiss-dark w-100" :disabled="submitting">
+                            <i class="bi bi-magic me-1"></i> 智能解析入帳
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Ledger Records Table & Filters -->
+            <div class="swiss-card">
+                <div class="swiss-card-header">
+                    <div>
+                        <h2 class="swiss-card-title">TRANSACTION LEDGER // 記帳歷史記錄</h2>
+                        <span class="text-muted small swiss-mono">PAGE {{ pageInfo.number + 1 }} OF {{ pageInfo.totalPages || 1 }} (TOTAL {{ pageInfo.totalElements }} RECORDS)</span>
+                    </div>
+
+                    <button class="btn btn-sm btn-swiss-outline" @click="toggleFilters">
+                        <i class="bi bi-funnel me-1"></i>
+                        <span>{{ showFilters ? '隱藏篩選器' : '開啟多維度篩選' }}</span>
+                    </button>
+                </div>
+
+                <!-- Filter Controls Panel -->
+                <div v-show="showFilters" class="p-3 bg-light border border-dark mb-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label class="form-label-swiss">收支類型</label>
+                            <select class="form-select form-select-swiss" v-model="filterParams.recordType" @change="applyFilters">
+                                <option value="">全部類型</option>
+                                <option value="EXPENSE">支出 (EXPENSE)</option>
+                                <option value="INCOME">收入 (INCOME)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label class="form-label-swiss">分類篩選</label>
+                            <select class="form-select form-select-swiss" v-model="filterParams.categoryId" @change="applyFilters">
+                                <option :value="null">全部分類</option>
+                                <option v-for="cat in allCategories" :key="cat.id" :value="cat.id">
+                                    [{{ cat.type === 'EXPENSE' ? '支' : '收' }}] {{ cat.name }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label class="form-label-swiss">開始日期</label>
+                            <input type="date" class="form-control form-control-swiss swiss-mono" v-model="filterParams.startDate" @change="applyFilters">
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-2">
+                            <label class="form-label-swiss">結束日期</label>
+                            <input type="date" class="form-control form-control-swiss swiss-mono" v-model="filterParams.endDate" @change="applyFilters">
+                        </div>
+
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <label class="form-label-swiss">備註關鍵字</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-swiss" v-model.trim="filterParams.keyword" placeholder="搜尋備註..." @keyup.enter="applyFilters">
+                                <button class="btn btn-swiss-dark" type="button" @click="applyFilters">搜尋</button>
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-1 text-end mt-auto">
+                            <button class="btn btn-sm btn-swiss-outline w-100" @click="resetFilters">重設</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Loading State -->
+                <div v-if="loadingRecords" class="text-center py-5">
+                    <div class="spinner-border text-dark" role="status"></div>
+                    <div class="text-muted swiss-mono small mt-2">載入記錄中...</div>
+                </div>
+
+                <!-- Empty State -->
+                <div v-else-if="records.length === 0" class="text-center py-5">
+                    <div class="text-muted mb-2"><i class="bi bi-inbox fs-1"></i></div>
+                    <div class="fw-bold">查無記帳記錄</div>
+                    <div class="text-muted small">使用上方快速記帳列新增第一筆記帳。</div>
+                </div>
+
+                <!-- Record List Table -->
+                <div v-else class="table-responsive">
+                    <table class="table table-swiss align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 130px;">記帳日期</th>
+                                <th style="width: 100px;">收支類型</th>
+                                <th style="width: 160px;">項目分類</th>
+                                <th>備註說明</th>
+                                <th class="text-end" style="width: 150px;">金額 (TWD)</th>
+                                <th class="text-end" style="width: 140px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in records" :key="item.id">
+                                <td class="swiss-mono fw-bold">{{ item.recordDate }}</td>
+                                <td>
+                                    <span class="badge-swiss" :class="item.recordType === 'EXPENSE' ? 'badge-swiss-expense' : 'badge-swiss-income'">
+                                        {{ item.recordType === 'EXPENSE' ? '支出' : '收入' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge-swiss badge-swiss-cat">
+                                        <i class="bi" :class="'bi-' + (item.categoryIconCode || 'tag')"></i>
+                                        {{ item.categoryName }}
+                                    </span>
+                                </td>
+                                <td>{{ item.description || '-' }}</td>
+                                <td class="text-end swiss-mono fw-bold" :class="item.recordType === 'EXPENSE' ? 'text-danger' : 'text-success'">
+                                    {{ item.recordType === 'EXPENSE' ? '-' : '+' }} {{ formatAmount(item.amount) }}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-swiss-outline me-1 py-1 px-2" @click="openEditModal(item)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-swiss-danger py-1 px-2" @click="deleteRecord(item.id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="d-flex justify-content-between align-items-center border-top border-dark pt-3 mt-3">
+                    <div class="text-muted small swiss-mono">
+                        SHOWING {{ records.length }} OF {{ pageInfo.totalElements }} ITEMS
+                    </div>
+
+                    <div class="d-flex gap-1" v-if="pageInfo.totalPages > 1">
+                        <button class="btn btn-sm btn-swiss-outline" 
+                                :disabled="pageInfo.number === 0" 
+                                @click="goToPage(pageInfo.number - 1)">
+                            ← 上一頁
+                        </button>
+                        <button class="btn btn-sm btn-swiss-outline" 
+                                :disabled="pageInfo.number >= pageInfo.totalPages - 1" 
+                                @click="goToPage(pageInfo.number + 1)">
+                            下一頁 →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Edit Record Modal -->
+        <div class="modal fade" id="editRecordModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content modal-content-swiss">
+                    <div class="modal-header modal-header-swiss">
+                        <h5 class="modal-title fw-bold text-uppercase swiss-title h6 mb-0">EDIT RECORD // 編輯記帳記錄</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form @submit.prevent="handleUpdateRecord">
+                        <div class="modal-body p-4">
+                            <div class="mb-3">
+                                <label class="form-label-swiss">收支類型</label>
+                                <div class="type-toggle-group w-100">
+                                    <button type="button" 
+                                            class="type-toggle-btn w-50"
+                                            :class="{ active: editForm.recordType === 'EXPENSE', expense: editForm.recordType === 'EXPENSE' }"
+                                            @click="setEditRecordType('EXPENSE')">
+                                        支出
+                                    </button>
+                                    <button type="button" 
+                                            class="type-toggle-btn w-50"
+                                            :class="{ active: editForm.recordType === 'INCOME', income: editForm.recordType === 'INCOME' }"
+                                            @click="setEditRecordType('INCOME')">
+                                        收入
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-swiss">項目分類</label>
+                                <select class="form-select form-select-swiss" v-model="editForm.categoryId" required>
+                                    <option v-for="cat in editFilteredCategories" :key="cat.id" :value="cat.id">
+                                        {{ cat.name }} {{ cat.isSystem ? '' : '(自訂)' }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-swiss">金額 (TWD)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control form-control-swiss swiss-mono" v-model.number="editForm.amount" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-swiss">記帳日期</label>
+                                <input type="date" class="form-control form-control-swiss swiss-mono" v-model="editForm.recordDate" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label-swiss">備註說明</label>
+                                <input type="text" class="form-control form-control-swiss" v-model.trim="editForm.description">
+                            </div>
+                        </div>
+                        <div class="modal-footer modal-footer-swiss">
+                            <button type="button" class="btn btn-swiss-outline" data-bs-dismiss="modal">取消</button>
+                            <button type="submit" class="btn btn-swiss-primary" :disabled="savingRecord">
+                                {{ savingRecord ? '儲存中...' : '確認更新' }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Management Modal -->
+        <div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content modal-content-swiss">
+                    <div class="modal-header modal-header-swiss">
+                        <h5 class="modal-title fw-bold text-uppercase swiss-title h6 mb-0">CATEGORY MANAGEMENT // 分類管理</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        
+                        <!-- Add Custom Category Form -->
+                        <div class="p-3 bg-light border border-dark mb-4">
+                            <div class="fw-bold text-uppercase swiss-mono small mb-2 text-danger">+ 新增自訂分類</div>
+                            <form @submit.prevent="handleCreateCategory" class="row g-2 align-items-center">
+                                <div class="col-12 col-sm-3">
+                                    <select class="form-select form-select-swiss" v-model="newCategory.type">
+                                        <option value="EXPENSE">支出 (EXPENSE)</option>
+                                        <option value="INCOME">收入 (INCOME)</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-4">
+                                    <input type="text" class="form-control form-control-swiss" v-model.trim="newCategory.name" placeholder="分類名稱 (例: 寵物開銷)" required>
+                                </div>
+                                <div class="col-12 col-sm-3">
+                                    <select class="form-select form-select-swiss" v-model="newCategory.iconCode">
+                                        <option value="tag">標籤 (tag)</option>
+                                        <option value="cart">購物 (cart)</option>
+                                        <option value="film">娛樂 (film)</option>
+                                        <option value="book">學習 (book)</option>
+                                        <option value="cup-hot">咖啡 (cup-hot)</option>
+                                        <option value="airplane">旅遊 (airplane)</option>
+                                        <option value="gift">禮品 (gift)</option>
+                                        <option value="currency-dollar">理財 (dollar)</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-2">
+                                    <button type="submit" class="btn btn-swiss-primary w-100" :disabled="creatingCategory">
+                                        新增
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Categories List -->
+                        <div class="table-responsive" style="max-height: 360px; overflow-y: auto;">
+                            <table class="table table-swiss align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 80px;">類型</th>
+                                        <th>分類名稱</th>
+                                        <th style="width: 120px;">性質</th>
+                                        <th class="text-end" style="width: 100px;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="cat in allCategories" :key="cat.id">
+                                        <td>
+                                            <span class="badge-swiss" :class="cat.type === 'EXPENSE' ? 'badge-swiss-expense' : 'badge-swiss-income'">
+                                                {{ cat.type === 'EXPENSE' ? '支出' : '收入' }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold">
+                                            <i class="bi me-1" :class="'bi-' + (cat.iconCode || 'tag')"></i>
+                                            {{ cat.name }}
+                                        </td>
+                                        <td>
+                                            <span class="badge-swiss" :class="cat.isSystem ? 'badge-swiss-cat' : 'badge-swiss-active'">
+                                                {{ cat.isSystem ? '系統內建 (保護)' : '使用者自訂' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button v-if="!cat.isSystem" class="btn btn-sm btn-swiss-danger py-0 px-2" @click="deleteCategory(cat.id)">
+                                                刪除
+                                            </button>
+                                            <span v-else class="text-muted small swiss-mono">唯讀</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer modal-footer-swiss">
+                        <button type="button" class="btn btn-swiss-dark" data-bs-dismiss="modal">關閉</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Strictly Local Offline JS Scripts (No External CDN) -->
+    <script th:src="@{/lib/bootstrap-5.3.3/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/lib/vue-3.4.x/vue.global.prod.js}"></script>
+    <script th:src="@{/lib/axios-1.7.x/axios.min.js}"></script>
+    <script th:src="@{/lib/sweetalert2-11.x/sweetalert2.all.min.js}"></script>
+
+    <!-- Utils & Page Logic -->
+    <script th:src="@{/js/utils/alert.js}"></script>
+    <script th:src="@{/js/utils/http.js}"></script>
+    <script th:src="@{/js/pages/ledger.js}"></script>
+</body>
+</html>

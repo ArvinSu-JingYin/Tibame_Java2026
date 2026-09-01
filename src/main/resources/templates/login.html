@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle}">登入與註冊 // SYS-AUTH</title>
+
+    <!-- Strictly Local Offline CSS Resources (No External CDN) -->
+    <link rel="stylesheet" th:href="@{/lib/bootstrap-5.3.3/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/lib/bootstrap-5.3.3/css/bootstrap-icons.css}">
+    <link rel="stylesheet" th:href="@{/css/swiss-style.css}">
+</head>
+<body class="swiss-body d-flex flex-column justify-content-center py-5">
+
+    <div id="app" v-cloak class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                
+                <!-- Swiss Header Bar -->
+                <div class="mb-4">
+                    <span class="swiss-tag">SYS-AUTH // 01</span>
+                    <h1 class="swiss-title h2 mb-1">SWISS LEDGER</h1>
+                    <p class="swiss-subtitle small mb-0">個人財務記帳系統 · 客觀幾何設計系統</p>
+                </div>
+
+                <!-- Main Auth Card -->
+                <div class="swiss-card">
+                    <!-- Tab Switcher -->
+                    <div class="d-flex border-bottom border-dark mb-4">
+                        <button type="button" 
+                                class="btn flex-fill text-uppercase fw-bold py-2 border-0"
+                                :class="mode === 'login' ? 'btn-swiss-dark' : 'btn-light text-muted'"
+                                @click="mode = 'login'">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> 帳號登入
+                        </button>
+                        <button type="button" 
+                                class="btn flex-fill text-uppercase fw-bold py-2 border-0"
+                                :class="mode === 'register' ? 'btn-swiss-dark' : 'btn-light text-muted'"
+                                @click="mode = 'register'">
+                            <i class="bi bi-person-plus me-1"></i> 新用戶註冊
+                        </button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form v-if="mode === 'login'" @submit.prevent="handleLogin">
+                        <div class="mb-3">
+                            <label class="form-label-swiss">使用者帳號 (USERNAME)</label>
+                            <input type="text" 
+                                   class="form-control form-control-swiss" 
+                                   v-model.trim="loginForm.username" 
+                                   placeholder="請輸入帳號" 
+                                   required 
+                                   autocomplete="username">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-swiss">登入密碼 (PASSWORD)</label>
+                            <input type="password" 
+                                   class="form-control form-control-swiss" 
+                                   v-model="loginForm.password" 
+                                   placeholder="請輸入密碼" 
+                                   required 
+                                   autocomplete="current-password">
+                        </div>
+
+                        <button type="submit" 
+                                class="btn btn-swiss-primary w-100 py-2 d-flex align-items-center justify-content-center"
+                                :disabled="loading">
+                            <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>{{ loading ? '驗證中...' : '確認登入 →' }}</span>
+                        </button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form v-if="mode === 'register'" @submit.prevent="handleRegister">
+                        <div class="mb-3">
+                            <label class="form-label-swiss">使用者帳號 (USERNAME)</label>
+                            <input type="text" 
+                                   class="form-control form-control-swiss" 
+                                   v-model.trim="registerForm.username" 
+                                   placeholder="設定 3~50 位帳號" 
+                                   required 
+                                   autocomplete="off">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label-swiss">電子郵件 (EMAIL)</label>
+                            <input type="email" 
+                                   class="form-control form-control-swiss" 
+                                   v-model.trim="registerForm.email" 
+                                   placeholder="example@mail.com" 
+                                   required 
+                                   autocomplete="email">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label-swiss">顯示名稱 (DISPLAY NAME)</label>
+                            <input type="text" 
+                                   class="form-control form-control-swiss" 
+                                   v-model.trim="registerForm.displayName" 
+                                   placeholder="自訂稱呼（選填）">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-swiss">登入密碼 (PASSWORD)</label>
+                            <input type="password" 
+                                   class="form-control form-control-swiss" 
+                                   v-model="registerForm.password" 
+                                   placeholder="至少 4 位字元" 
+                                   required 
+                                   autocomplete="new-password">
+                        </div>
+
+                        <button type="submit" 
+                                class="btn btn-swiss-dark w-100 py-2 d-flex align-items-center justify-content-center"
+                                :disabled="loading">
+                            <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>{{ loading ? '建立帳號中...' : '建立帳號並登入 →' }}</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Footer Info -->
+                <div class="text-center text-muted small swiss-mono mt-3">
+                    STRICT OFFLINE // MS SQL SERVER // SPRING BOOT 3
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strictly Local Offline JS Scripts (No External CDN) -->
+    <script th:src="@{/lib/bootstrap-5.3.3/js/bootstrap.bundle.min.js}"></script>
+    <script th:src="@{/lib/vue-3.4.x/vue.global.prod.js}"></script>
+    <script th:src="@{/lib/axios-1.7.x/axios.min.js}"></script>
+    <script th:src="@{/lib/sweetalert2-11.x/sweetalert2.all.min.js}"></script>
+
+    <!-- Utils & Page Logic -->
+    <script th:src="@{/js/utils/alert.js}"></script>
+    <script th:src="@{/js/utils/http.js}"></script>
+    <script th:src="@{/js/pages/login.js}"></script>
+</body>
+</html>

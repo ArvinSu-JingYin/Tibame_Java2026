@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: daily-ledger-system
+
+  datasource:
+    url: jdbc:h2:mem:tibame_account;MODE=MSSQLServer;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+jwt:
+  secret: SwissLedgerSecureJwtKeyForDailyAccountBookSystem2026!#SwissLedger2026
+  expiration-ms: 86400000 # 24 hours in milliseconds
+
+logging:
+  level:
+    com.tibame: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: INFO

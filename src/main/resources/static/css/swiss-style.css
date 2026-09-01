@@ -1,0 +1,403 @@
+/**
+ * Swiss International Typographic Style Design System
+ * Focus: Form Follows Function, Geometric Precision, 0px Radius, Signature Swiss Red Accent
+ */
+:root {
+    --swiss-red: #dc2626;
+    --swiss-red-hover: #b91c1c;
+    --swiss-black: #111111;
+    --swiss-dark: #262626;
+    --swiss-grey: #737373;
+    --swiss-light-grey: #e5e5e5;
+    --swiss-border-color: #111111;
+    --swiss-bg: #f8f9fa;
+    --swiss-white: #ffffff;
+    --swiss-income: #16a34a;
+    --swiss-expense: #dc2626;
+
+    --swiss-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --swiss-font-mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    --swiss-radius: 0px;
+}
+
+* {
+    border-radius: 0 !important;
+}
+
+body.swiss-body {
+    background-color: var(--swiss-bg);
+    color: var(--swiss-dark);
+    font-family: var(--swiss-font);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+[v-cloak] {
+    display: none !important;
+}
+
+/* Typography */
+.swiss-mono {
+    font-family: var(--swiss-font-mono);
+}
+
+.swiss-tag {
+    display: inline-block;
+    font-family: var(--swiss-font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--swiss-red);
+    margin-bottom: 0.35rem;
+}
+
+.swiss-title {
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--swiss-black);
+    line-height: 1.1;
+}
+
+.swiss-subtitle {
+    font-weight: 600;
+    color: var(--swiss-grey);
+    letter-spacing: -0.01em;
+}
+
+/* Navigation & Headers */
+.swiss-navbar {
+    background-color: var(--swiss-white);
+    border-bottom: 2px solid var(--swiss-black);
+    padding: 0.85rem 0;
+}
+
+.swiss-brand {
+    font-weight: 900;
+    font-size: 1.25rem;
+    letter-spacing: -0.03em;
+    color: var(--swiss-black);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.swiss-brand-badge {
+    background-color: var(--swiss-red);
+    color: var(--swiss-white);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    letter-spacing: 0.05em;
+}
+
+/* Cards & Containers */
+.swiss-card {
+    background-color: var(--swiss-white);
+    border: 1px solid var(--swiss-black);
+    box-shadow: none !important;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.swiss-card-header {
+    border-bottom: 1px solid var(--swiss-black);
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.swiss-card-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Stat Metric Cards */
+.swiss-stat-card {
+    background-color: var(--swiss-white);
+    border: 1px solid var(--swiss-black);
+    padding: 1.25rem;
+    transition: transform 0.15s ease-in-out;
+}
+
+.swiss-stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.swiss-stat-label {
+    font-family: var(--swiss-font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--swiss-grey);
+    margin-bottom: 0.5rem;
+}
+
+.swiss-stat-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-family: var(--swiss-font-mono);
+}
+
+.swiss-stat-income {
+    color: var(--swiss-income);
+    border-top: 4px solid var(--swiss-income);
+}
+
+.swiss-stat-expense {
+    color: var(--swiss-expense);
+    border-top: 4px solid var(--swiss-expense);
+}
+
+.swiss-stat-balance {
+    color: var(--swiss-black);
+    border-top: 4px solid var(--swiss-black);
+}
+
+/* Buttons */
+.btn-swiss-primary {
+    background-color: var(--swiss-red);
+    color: var(--swiss-white) !important;
+    border: 1px solid var(--swiss-red);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.55rem 1.25rem;
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.btn-swiss-primary:hover {
+    background-color: var(--swiss-black);
+    border-color: var(--swiss-black);
+}
+
+.btn-swiss-dark {
+    background-color: var(--swiss-black);
+    color: var(--swiss-white) !important;
+    border: 1px solid var(--swiss-black);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.55rem 1.25rem;
+    transition: background-color 0.15s ease-in-out;
+}
+
+.btn-swiss-dark:hover {
+    background-color: #333333;
+    border-color: #333333;
+}
+
+.btn-swiss-outline {
+    background-color: transparent;
+    color: var(--swiss-black) !important;
+    border: 1px solid var(--swiss-black);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.25rem;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.btn-swiss-outline:hover {
+    background-color: var(--swiss-black);
+    color: var(--swiss-white) !important;
+}
+
+.btn-swiss-danger {
+    background-color: var(--swiss-white);
+    color: var(--swiss-red) !important;
+    border: 1px solid var(--swiss-red);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.25rem;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.btn-swiss-danger:hover {
+    background-color: var(--swiss-red);
+    color: var(--swiss-white) !important;
+}
+
+/* Quick Entry Search Bar */
+.swiss-quick-bar {
+    background-color: var(--swiss-white);
+    border: 2px solid var(--swiss-black);
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.swiss-quick-title {
+    font-family: var(--swiss-font-mono);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Tables */
+.table-swiss {
+    border-top: 2px solid var(--swiss-black);
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.table-swiss th {
+    font-family: var(--swiss-font-mono);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+    letter-spacing: 0.06em;
+    color: var(--swiss-black);
+    border-bottom: 1px solid var(--swiss-black);
+    background-color: var(--swiss-bg);
+    padding: 0.85rem 1rem;
+}
+
+.table-swiss td {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid var(--swiss-light-grey);
+    font-size: 0.9375rem;
+    vertical-align: middle;
+}
+
+.table-swiss tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+/* Form Controls */
+.form-control-swiss, .form-select-swiss {
+    border: 1px solid var(--swiss-black) !important;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.9375rem;
+    color: var(--swiss-black);
+    background-color: var(--swiss-white);
+}
+
+.form-control-swiss:focus, .form-select-swiss:focus {
+    border-color: var(--swiss-red) !important;
+    box-shadow: 0 0 0 1px var(--swiss-red) !important;
+    outline: none;
+}
+
+.form-label-swiss {
+    font-family: var(--swiss-font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--swiss-black);
+    margin-bottom: 0.35rem;
+}
+
+/* Badges */
+.badge-swiss {
+    font-family: var(--swiss-font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.3rem 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.badge-swiss-expense {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #f87171;
+}
+
+.badge-swiss-income {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.badge-swiss-cat {
+    background-color: var(--swiss-bg);
+    color: var(--swiss-black);
+    border: 1px solid var(--swiss-light-grey);
+}
+
+/* SweetAlert2 Swiss Custom Classes */
+.swiss-swal-popup {
+    border: 2px solid var(--swiss-black) !important;
+    box-shadow: none !important;
+    font-family: var(--swiss-font) !important;
+}
+
+.swiss-swal-title {
+    font-family: var(--swiss-font) !important;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    font-size: 1.25rem;
+    color: var(--swiss-black);
+}
+
+.swiss-swal-toast {
+    border: 1px solid var(--swiss-black) !important;
+    background-color: var(--swiss-black) !important;
+    color: var(--swiss-white) !important;
+    font-family: var(--swiss-font-mono) !important;
+    font-size: 0.875rem !important;
+}
+
+/* Modal Dialog Swiss */
+.modal-content-swiss {
+    border: 2px solid var(--swiss-black) !important;
+    box-shadow: none !important;
+}
+
+.modal-header-swiss {
+    border-bottom: 1px solid var(--swiss-black) !important;
+    padding: 1.25rem 1.5rem !important;
+    background-color: var(--swiss-bg);
+}
+
+.modal-footer-swiss {
+    border-top: 1px solid var(--swiss-black) !important;
+    padding: 1rem 1.5rem !important;
+}
+
+/* Type Toggle Buttons */
+.type-toggle-group {
+    display: inline-flex;
+    border: 1px solid var(--swiss-black);
+}
+
+.type-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 0.55rem 1.25rem;
+    font-family: var(--swiss-font-mono);
+    font-weight: 700;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.type-toggle-btn.active.expense {
+    background-color: var(--swiss-red);
+    color: var(--swiss-white);
+}
+
+.type-toggle-btn.active.income {
+    background-color: var(--swiss-income);
+    color: var(--swiss-white);
+}

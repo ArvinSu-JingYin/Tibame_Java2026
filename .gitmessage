@@ -1,0 +1,24 @@
+# <type>(<scope>): <繁體中文簡述 (50-72字以內，動詞開頭，結尾不加句號)>
+#
+# [詳細變更說明 (選填/複雜變更必填)]
+# - 條列具體變更細節與邏輯
+# - 說明為什麼要進行此調整
+#
+# Opsx: <change-name>
+#
+# --------------------------------------------------------------------------
+# Type 類型:
+#   feat     : 新增功能
+#   fix      : 錯誤修復
+#   refactor : 代碼重構 (無功能變動)
+#   perf     : 效能優化
+#   test     : 測試相關
+#   style    : 代碼格式調整 (不影響邏輯)
+#   docs     : 文檔變更 (README, OpenSpec, Javadoc)
+#   chore    : 構建/依賴/工具變更 (pom.xml, .gitignore)
+#   revert   : 還原提交
+#
+# Scope (Spring 架構層級):
+#   controller / service / repository / entity / dto / config /
+#   security / exception / view / common / build / specs
+# --------------------------------------------------------------------------
