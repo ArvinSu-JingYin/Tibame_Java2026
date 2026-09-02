@@ -1,5 +1,6 @@
-package com.tibame.common.security;
+package com.tibame.common.crypto.token.impl;
 
+import com.tibame.common.crypto.token.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -12,6 +13,9 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+/**
+ * 基於 JJWT (HMAC-SHA) 的權杖服務實作
+ */
 @Slf4j
 @Service
 public class JwtTokenServiceImpl implements TokenService {
@@ -24,6 +28,7 @@ public class JwtTokenServiceImpl implements TokenService {
             @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+        log.info("初始化 JWT 權杖簽署服務 (HMAC-SHA, Expiration: {} ms)", expirationMs);
     }
 
     @Override
@@ -49,7 +54,7 @@ public class JwtTokenServiceImpl implements TokenService {
                     .parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("JWT validation failed: {}", e.getMessage());
+            log.debug("JWT 驗證失敗: {}", e.getMessage());
             return false;
         }
     }

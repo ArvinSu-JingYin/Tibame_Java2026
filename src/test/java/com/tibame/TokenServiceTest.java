@@ -1,6 +1,7 @@
 package com.tibame;
 
-import com.tibame.common.security.JwtTokenServiceImpl;
+import com.tibame.common.crypto.token.TokenService;
+import com.tibame.common.crypto.token.impl.JwtTokenServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

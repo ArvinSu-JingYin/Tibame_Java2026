@@ -1,8 +1,9 @@
 package com.tibame.common.security;
 
-public interface TokenService {
-    String generateToken(Long userId, String username);
-    boolean validateToken(String token);
-    Long getUserIdFromToken(String token);
-    String getUsernameFromToken(String token);
+/**
+ * 舊版權杖介面 (已移轉至 com.tibame.common.crypto.token.TokenService)
+ * @deprecated 請改用 {@link com.tibame.common.crypto.token.TokenService}
+ */
+@Deprecated
+public interface TokenService extends com.tibame.common.crypto.token.TokenService {
 }

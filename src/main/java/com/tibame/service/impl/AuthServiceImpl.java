@@ -1,9 +1,11 @@
 package com.tibame.service.impl;
 
+import com.tibame.common.crypto.password.PasswordPolicyValidator;
+import com.tibame.common.crypto.password.PasswordService;
+import com.tibame.common.crypto.token.TokenService;
 import com.tibame.common.exception.ConflictException;
 import com.tibame.common.exception.ResourceNotFoundException;
 import com.tibame.common.exception.UnauthorizedException;
-import com.tibame.common.security.TokenService;
 import com.tibame.model.dto.LoginRequestDto;
 import com.tibame.model.dto.RegisterRequestDto;
 import com.tibame.model.entity.User;
@@ -14,17 +16,21 @@ import com.tibame.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 認證與帳號服務實作
+ * 整合模組化 PasswordService、PasswordPolicyValidator 與 TokenService
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordService passwordService;
+    private final PasswordPolicyValidator passwordPolicyValidator;
     private final TokenService tokenService;
 
     @Value("${jwt.expiration-ms:86400000}")
@@ -40,9 +46,12 @@ public class AuthServiceImpl implements AuthService {
             throw new ConflictException("該電子郵件已被註冊: " + requestDto.getEmail());
         }
 
+        // 密碼原則與強度校驗
+        passwordPolicyValidator.validate(requestDto.getPassword());
+
         User user = User.builder()
                 .username(requestDto.getUsername())
-                .passwordHash(passwordEncoder.encode(requestDto.getPassword()))
+                .passwordHash(passwordService.hash(requestDto.getPassword()))
                 .email(requestDto.getEmail())
                 .displayName(requestDto.getDisplayName() != null && !requestDto.getDisplayName().isBlank()
                         ? requestDto.getDisplayName()
@@ -55,13 +64,21 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional(rollbackFor = Exception.class)
     public LoginResponseVo login(LoginRequestDto requestDto) {
         User user = userRepository.findByUsername(requestDto.getUsername())
                 .orElseThrow(() -> new UnauthorizedException("帳號或密碼不正確"));
 
-        if (!passwordEncoder.matches(requestDto.getPassword(), user.getPasswordHash())) {
+        if (!passwordService.verify(requestDto.getPassword(), user.getPasswordHash())) {
             throw new UnauthorizedException("帳號或密碼不正確");
+        }
+
+        // 檢測是否需要無感平滑升級密碼雜湊
+        if (passwordService.needsUpgrade(user.getPasswordHash())) {
+            String upgradedHash = passwordService.hash(requestDto.getPassword());
+            user.setPasswordHash(upgradedHash);
+            userRepository.save(user);
+            log.info("用戶密碼雜湊已自動平滑升級: userId={}, username={}", user.getId(), user.getUsername());
         }
 
         String token = tokenService.generateToken(user.getId(), user.getUsername());

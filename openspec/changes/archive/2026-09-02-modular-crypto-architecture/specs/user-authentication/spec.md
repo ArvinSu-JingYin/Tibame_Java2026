@@ -1,8 +1,4 @@
-## Purpose
-
-Provides secure, stateless user registration, authentication, password verification, and identity context management for the daily ledger platform.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: User Registration
 The system SHALL allow new users to register an account by providing a unique username, a password, an email address, and an optional display name, validating password strength before account creation.
@@ -34,16 +30,7 @@ The system SHALL authenticate user credentials, evaluate whether the stored pass
 - **WHEN** a user provides an incorrect password or non-existent username
 - **THEN** the system MUST reject the authentication request with an unauthorized error status without leaking whether the username exists
 
-### Requirement: Authenticated Identity Context and Profile Access
-The system SHALL extract and validate the JWT token from incoming request headers, establishing the user context for protected API operations.
-
-#### Scenario: Accessing current user profile with valid token
-- **WHEN** an authenticated client sends a request to `/api/v1/auth/me` with a valid Bearer token
-- **THEN** the system MUST return the current user's identity details (id, username, email, displayName)
-
-#### Scenario: Accessing protected endpoints without a token or with an invalid token
-- **WHEN** a client attempts to access a protected endpoint without an `Authorization` header or with an expired/tampered token
-- **THEN** the system MUST reject the request with HTTP 401 Unauthorized status
+## ADDED Requirements
 
 ### Requirement: Password Policy Enforcement
 The system SHALL provide a configurable password policy validator enforcing length and character composition rules across user creation and password update workflows.
