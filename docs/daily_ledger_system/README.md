@@ -19,7 +19,8 @@
 | [03_system_architecture_and_design.md](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/docs/daily_ledger_system/03_system_architecture_and_design.md) | **技術架構與設計** | 後端四層分層架構、雙輸入模式（方案 A/B）擴展架構、可插拔 TokenService 類別設計。 |
 | [04_database_design_and_ddl.md](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/docs/daily_ledger_system/04_database_design_and_ddl.md) | **資料庫設計與 DDL** | MS SQL Server 資料庫 ERD 關聯圖、資料表欄位定義與初始化 Seed 腳本。 |
 | [05_tasks_and_implementation_plan.md](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/docs/daily_ledger_system/05_tasks_and_implementation_plan.md) | **任務分解與實施計畫** | 實作甘特圖 (Gantt Chart)、7 大模組共 16 項可驗收實作任務清單明細。 |
-| [06_quality_assurance_and_dod.md](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/docs/daily_ledger_system/06_quality_assurance_and_dod.md) | **品質保證與驗收標準** | 交付定義檢核矩陣 (DoD Matrix)、安全/效能/離線規範與總結。 |
+| [06_quality_assurance_and_dod.md](file:///c:/Arvin/GitHub/Tibame_Java2026/Tibame_Java2026/docs/daily_ledger_system/06_quality_assurance_and_dod.md) | **品質保證與驗收標準** | 交付定義檢核矩陣 (DoD Matrix)、安全/效能/離線規範與總結。 |
+| [07_startup_script_and_devops_guide.md](file:///c:/Arvin/GitHub/Tibame_Java2026/Tibame_Java2026/docs/daily_ledger_system/07_startup_script_and_devops_guide.md) | **啟動腳本與維運指南** | PowerShell `start.ps1` 參數規格、智慧前置診斷、雙資料庫切換與維運指南。 |
 
 ---
 
