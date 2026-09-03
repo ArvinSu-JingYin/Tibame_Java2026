@@ -18,6 +18,7 @@ checklist
     - [x] 靜態資產 Strict No-CDN (100% 純離線載入)
     - [x] 視覺設計 100% 遵循瑞士國際主義風格
     - [x] 金額運算一律採用 BigDecimal 防止精度遺失
+    - [x] 代碼潔淨零警告 (Zero-Warning) 檢驗通過
     - [x] OpenSpec 嚴格模式檢驗通過 (Strict Validated)
 ```
 
@@ -41,6 +42,11 @@ checklist
 
 4. **數值與金額精度**：
    - 所有金額在後端 Java 中必須使用 `BigDecimal` 處理，資料庫使用 `DECIMAL(12, 2)`，避免浮點數精度偏差。
+
+5. **代碼潔淨與零警告規約 (Zero-Warning Standard)**：
+   - 繼承 `JpaRepository` 之介面一律不得標註多餘的 `@Repository`。
+   - 所有正規表達式 `Pattern` 必須宣告為 `private static final` 類別常數快取，嚴禁於方法內部重複編譯或殘留孤兒死碼欄位。
+   - 全模組必須 100% 遵循 [專案通用工程標準、代碼潔淨與 IDE 排除指南](../engineering_standards_and_code_cleanliness.md)，確保 IDE Problems 面板維持 0 錯誤、0 警告。
 
 ---
 

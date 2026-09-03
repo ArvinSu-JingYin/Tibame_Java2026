@@ -63,6 +63,7 @@ docs/
     │   └── 09_unit_testing_guide_and_test_catalog.md       (單元測試操作手冊與 54 案例清單)
     │
     ├── core_services_unit_testing_design.md                (核心業務服務單元測試設計規格)
+    ├── engineering_standards_and_code_cleanliness.md       (專案通用工程標準、代碼潔淨與 IDE 排除指南)
     └── startup_script_specification_and_guide.md           (啟動腳本 start.ps1 規格與維運手冊)
 ```
 
@@ -77,7 +78,8 @@ docs/
 | **身分認證與密碼安全** | [modular_crypto_and_pqc_design_exploration.md](explorations/modular_crypto_and_pqc_design_exploration.md) | [02_functional_specifications.md](specifications/daily_ledger_system/02_functional_specifications.md)<br>[03_system_architecture_and_design.md](specifications/daily_ledger_system/03_system_architecture_and_design.md) | BCrypt / Argon2id / ML-KEM 抗量子加密、JWT/Session 認證時序 |
 | **記帳與分類核心業務** | [system_exploration_report.md](explorations/system_exploration_report.md)<br>[daily_ledger_system_specification_and_planning_report.md](explorations/daily_ledger_system_specification_and_planning_report.md) | [02_functional_specifications.md](specifications/daily_ledger_system/02_functional_specifications.md)<br>[04_database_design_and_ddl.md](specifications/daily_ledger_system/04_database_design_and_ddl.md)<br>[08_system_operation_and_user_manual.md](specifications/daily_ledger_system/08_system_operation_and_user_manual.md) | 分類雙層樹狀管理、收支流水帳 CRUD、統計圖表、MS SQL 實體設計 |
 | **測試體系與品質保證** | [automated_testing_strategy_and_exploration.md](explorations/automated_testing_strategy_and_exploration.md) | [core_services_unit_testing_design.md](specifications/core_services_unit_testing_design.md)<br>[09_unit_testing_guide_and_test_catalog.md](specifications/daily_ledger_system/09_unit_testing_guide_and_test_catalog.md)<br>[06_quality_assurance_and_dod.md](specifications/daily_ledger_system/06_quality_assurance_and_dod.md) | 單元測試金字塔、54 個完整測試案例矩陣、Mock 隔離設計、DoD 檢核 |
-| **腳本工具與環境維運** | [code_cleanliness_and_ide_troubleshooting_exploration.md](explorations/code_cleanliness_and_ide_troubleshooting_exploration.md) | [startup_script_specification_and_guide.md](specifications/startup_script_specification_and_guide.md)<br>[07_startup_script_and_devops_guide.md](specifications/daily_ledger_system/07_startup_script_and_devops_guide.md) | `start.ps1` 參數契約、智慧環境前置偵測、雙資料庫切換、IDE 潔淨排查 |
+| **工程標準與代碼潔淨** | [code_cleanliness_and_ide_troubleshooting_exploration.md](explorations/code_cleanliness_and_ide_troubleshooting_exploration.md) | [engineering_standards_and_code_cleanliness.md](specifications/engineering_standards_and_code_cleanliness.md) | IDE 存檔自動化、正則常數快取、JpaRepository 標註、Zero-Warning 交付矩陣 |
+| **腳本工具與環境維運** | - | [startup_script_specification_and_guide.md](specifications/startup_script_specification_and_guide.md)<br>[07_startup_script_and_devops_guide.md](specifications/daily_ledger_system/07_startup_script_and_devops_guide.md) | `start.ps1` 參數契約、智慧環境前置偵測、雙資料庫切換、非同步瀏覽器啟動 |
 | **文件治理與架構體系** | [documentation_governance_and_dual_track_structure_exploration.md](explorations/documentation_governance_and_dual_track_structure_exploration.md) | [README.md](README.md) (本門戶)<br>[specifications/daily_ledger_system/README.md](specifications/daily_ledger_system/README.md) | 雙軌架構、SSOT 單一真實來源、OpenSpec 變更生命週期銜接 |
 
 ---
