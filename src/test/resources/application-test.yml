@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:tibame_account_test;MODE=MSSQLServer;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  sql:
+    init:
+      mode: never
+
+  h2:
+    console:
+      enabled: false
+
+  thymeleaf:
+    cache: false
+    mode: HTML
+    encoding: UTF-8
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+jwt:
+  secret: E2ETestSecretKeyForDailyLedgerSwissArchitecture2026!#TestingOnlySuperSecretKey
+  expiration-ms: 3600000 # 1 hour for test suite
+
+logging:
+  level:
+    com.tibame: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
