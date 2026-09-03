@@ -50,10 +50,11 @@ public class CryptoServiceTest {
         String plainText = "SensitiveFinancialRecord";
         String cipherEnvelope = cryptoService.encrypt(plainText);
 
-        // 竄改最後一個字元
-        char lastChar = cipherEnvelope.charAt(cipherEnvelope.length() - 1);
-        char tamperedChar = (lastChar == 'A') ? 'B' : 'A';
-        String tamperedCipher = cipherEnvelope.substring(0, cipherEnvelope.length() - 1) + tamperedChar;
+        // 竄改密文中的有效字元 (避免落在 Base64 未使用的填充位元)
+        int tamperIndex = cipherEnvelope.length() - 3;
+        char origChar = cipherEnvelope.charAt(tamperIndex);
+        char tamperedChar = (origChar == 'A') ? 'B' : 'A';
+        String tamperedCipher = cipherEnvelope.substring(0, tamperIndex) + tamperedChar + cipherEnvelope.substring(tamperIndex + 1);
 
         assertThrows(CryptoException.class, () -> cryptoService.decrypt(tamperedCipher));
     }
