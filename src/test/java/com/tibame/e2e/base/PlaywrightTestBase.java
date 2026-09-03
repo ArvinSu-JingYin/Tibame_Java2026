@@ -35,9 +35,14 @@ public abstract class PlaywrightTestBase {
     static void initPlaywright() {
         if (playwright == null) {
             playwright = Playwright.create();
-            browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions().setHeadless(true)
-            );
+            boolean isHeaded = Boolean.parseBoolean(System.getProperty("playwright.headed", "false"))
+                    || Boolean.parseBoolean(System.getenv("PLAYWRIGHT_HEADED"));
+            BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions()
+                    .setHeadless(!isHeaded);
+            if (isHeaded) {
+                launchOptions.setSlowMo(400);
+            }
+            browser = playwright.chromium().launch(launchOptions);
         }
     }
 

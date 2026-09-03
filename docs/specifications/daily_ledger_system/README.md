@@ -24,6 +24,7 @@
 | [07_startup_script_and_devops_guide.md](07_startup_script_and_devops_guide.md) | **啟動腳本與維運指南** | PowerShell `start.ps1` 參數規格、智慧前置診斷、雙資料庫切換與維運指南。 |
 | [08_system_operation_and_user_manual.md](08_system_operation_and_user_manual.md) | **系統操作手冊與案例指南** | 終端使用者 SOP、中央記帳操作、收支儀表板、自訂分類防呆與實務生活案例演練。 |
 | [09_unit_testing_guide_and_test_catalog.md](09_unit_testing_guide_and_test_catalog.md) | **單元測試操作手冊與盤點清單** | 單元測試執行指南、AAA 撰寫範式、全套件 54 個單元測試案例盤點與開發檢核清單。 |
+| [10_e2e_testing_guide_and_operation_manual.md](10_e2e_testing_guide_and_operation_manual.md) | **端到端測試操作手冊與維運指南** | E2E 測試分流指南、動態有頭除錯模式 (SlowMo)、POM 範式、10 大測試案例矩陣與 FAQ 排查對策。 |
 
 ---
 

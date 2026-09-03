@@ -2,6 +2,7 @@
 
 > **專案代號**：`daily-ledger-system`  
 > **所屬模組**：單元測試操作手冊、AAA 撰寫範式、54 測試情境矩陣與開發檢核標準  
+> **導覽指引**：[← 返回流水帳規格目錄 (README.md)](README.md) ｜ [下一篇：10 E2E 測試手冊 →](10_e2e_testing_guide_and_operation_manual.md) ｜ [← 返回專案總門戶 (docs/README.md)](../../README.md)  
 > **技術棧**：Java 21 / Spring Boot 3.3.3 / JUnit 5 (Jupiter) / Mockito / AssertJ / Maven Wrapper  
 > **測試統計**：8 個測試類別，共 54 個單元測試案例（全數通過，綠燈率 100%，耗時約 2~5 秒）  
 > **文件狀態**：正式發布 (`Active`)  
