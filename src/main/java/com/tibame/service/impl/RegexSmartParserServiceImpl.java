@@ -22,7 +22,7 @@ public class RegexSmartParserServiceImpl implements SmartParserService {
 
     private final CategoryRepository categoryRepository;
 
-    private static final Pattern AMOUNT_PATTERN = Pattern.compile("(?<!\\d\\-)(?:\\$|NT\\$)?(\\d+(?:\\.\\d{1,2})?)(?!\\-\\d)");
+    private static final Pattern AMOUNT_PATTERN = Pattern.compile("(?<!\\d[-/])(?:\\$|NT\\$)?\\s*(\\d+(?:\\.\\d{1,2})?)\\s*(?:元|塊)?(?![-/\\d]|\\s*月|\\s*日|\\s*號)");
     private static final Pattern DATE_PATTERN = Pattern.compile("\\b(\\d{4}-\\d{2}-\\d{2})\\b");
 
     @Override
@@ -46,8 +46,7 @@ public class RegexSmartParserServiceImpl implements SmartParserService {
         String matchedRawAmount = null;
 
         // 優先匹配帶貨幣符號或單位 (如 $500, NT$500, 500元) 或獨立數字
-        Pattern candidatePattern = Pattern.compile("(?<!\\d[-/])(?:\\$|NT\\$)?\\s*(\\d+(?:\\.\\d{1,2})?)\\s*(?:元|塊)?(?![-/\\d]|\\s*月|\\s*日|\\s*號)");
-        Matcher amountMatcher = candidatePattern.matcher(text);
+        Matcher amountMatcher = AMOUNT_PATTERN.matcher(text);
         while (amountMatcher.find()) {
             String numStr = amountMatcher.group(1);
             try {

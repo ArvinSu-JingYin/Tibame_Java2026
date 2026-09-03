@@ -1,17 +1,16 @@
 package com.tibame.service;
 
-import com.tibame.common.crypto.password.PasswordPolicyValidator;
-import com.tibame.common.crypto.password.PasswordService;
-import com.tibame.common.crypto.token.TokenService;
-import com.tibame.common.exception.ConflictException;
-import com.tibame.common.exception.UnauthorizedException;
-import com.tibame.model.dto.LoginRequestDto;
-import com.tibame.model.dto.RegisterRequestDto;
-import com.tibame.model.entity.User;
-import com.tibame.model.vo.LoginResponseVo;
-import com.tibame.model.vo.UserProfileVo;
-import com.tibame.repository.UserRepository;
-import com.tibame.service.impl.AuthServiceImpl;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,13 +20,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import com.tibame.common.crypto.password.PasswordPolicyValidator;
+import com.tibame.common.crypto.password.PasswordService;
+import com.tibame.common.crypto.token.TokenService;
+import com.tibame.common.exception.UnauthorizedException;
+import com.tibame.model.dto.LoginRequestDto;
+import com.tibame.model.dto.RegisterRequestDto;
+import com.tibame.model.entity.User;
+import com.tibame.model.vo.LoginResponseVo;
+import com.tibame.model.vo.UserProfileVo;
+import com.tibame.repository.UserRepository;
+import com.tibame.service.impl.AuthServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthService 模組化單元測試")

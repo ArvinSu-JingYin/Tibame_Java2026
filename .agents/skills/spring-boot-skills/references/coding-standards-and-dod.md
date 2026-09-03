@@ -30,6 +30,9 @@
 - **查詢方法**：`get*ById`, `find*By*`, `query*`；務必標註 `@Transactional(readOnly = true)`。
 - **異動方法**：`create*`, `update*`, `delete*`；涉及多步或金流交易必須標註 `@Transactional(rollbackFor = Exception.class)`。
 - **輸入驗證**：Controller 接收 DTO 時必須加上 `@Valid` 或 `@Validated`。
+- **Repository 標註規範**：繼承 `JpaRepository` 之介面嚴禁標註 `@Repository`（由 Spring Data 自動代理裝配，避免多餘標註）。
+- **靜態正則與常數規範**：所有正則表達式（`Pattern`）必須以 `private static final` 宣告於類別層級快取，嚴禁在方法內重複 `Pattern.compile`；重構時嚴禁遺留未引用的死碼欄位。
+- **單元測試修飾詞規範**：JUnit 5 測試類別與測試方法一律採套件預設可見性（不加 `public`）。
 
 ---
 
@@ -70,3 +73,4 @@
 - [ ] **[前端] 嚴格離線 No-CDN**：頁面無任何外網 CDN 依賴，所有靜態庫本地化於 `resources/static/lib/`。
 - [ ] **[前端] 瑞士風格視覺**：嚴格落實直角幾何邊框（0px 圓角）、無模糊陰影、經典瑞士紅輔助色、高對比無襯線排版。
 - [ ] **[前端] 統一非同步與提示**：所有 API 呼叫使用封裝後的 `window.http`，成功/失敗互動統一調用 `window.SwissAlert`。
+- [ ] **[後端] 代碼潔淨與零警告**：全專案 0 未使用 Import，0 孤兒死碼常數，繼承 `JpaRepository` 之介面無多餘 `@Repository`，IDE Problems 零錯誤零警告。

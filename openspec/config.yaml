@@ -31,6 +31,9 @@ operations:
     guidance:
       - Keep test summaries concise
       - When generating git commits, adhere strictly to .agents/rules/git-commit-rules.md
+      - Never add redundant @Repository to JpaRepository interfaces
+      - Cache regex Pattern as private static final and prevent dead fields
+      - Ensure zero unused imports and zero compiler warnings before completing tasks
   archive:
     guidance:
       - Summarize the archive outcome before finishing
