@@ -2,7 +2,7 @@
 
 > **專案代號**：`daily-ledger-system`  
 > **所屬模組**：系統對外規格契約與場景矩陣  
-> **相關基準**：[OpenSpec Specs](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/openspec/changes/daily-ledger-system/specs)
+> **相關基準**：[OpenSpec Specs](../../../openspec/specs)
 
 規格契約定義系統對外公開行為，杜絕內部實作細節污染，並具備完整之驗收場景 (Scenarios)。
 

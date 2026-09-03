@@ -4,6 +4,7 @@
 > **探索主題**：密碼管理與加解密模組化設計 (Crypto Agility & Post-Quantum Cryptography Readiness)  
 > **狀態**：探索完成與架構歸納 (`Exploration Completed`)  
 > **建立日期**：2026-09-02  
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md)  
 
 ---
 

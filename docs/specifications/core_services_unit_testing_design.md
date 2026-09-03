@@ -3,6 +3,7 @@
 > **文件版本**：v1.0.0  
 > **建立日期**：2026-09-02  
 > **技術棧**：Java 21 / Spring Boot 3.3.3 / JUnit 5 / Mockito / AssertJ  
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md)  
 > **測試目標模組**：`CategoryService` (`CategoryServiceImpl`), `LedgerService` (`LedgerServiceImpl`)  
 
 ---

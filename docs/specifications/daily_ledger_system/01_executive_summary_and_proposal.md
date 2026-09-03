@@ -2,7 +2,7 @@
 
 > **專案代號**：`daily-ledger-system`  
 > **所屬模組**：提案總覽與核心價值  
-> **相關基準**：[OpenSpec Proposal](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/openspec/changes/daily-ledger-system/proposal.md)
+> **相關基準**：[OpenSpec Specs](../../../openspec/specs)
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **專案代號**：`daily-ledger-system`  
 > **所屬模組**：開發階段任務拆解與甘特圖  
-> **相關基準**：[OpenSpec Tasks](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/openspec/changes/daily-ledger-system/tasks.md)
+> **相關基準**：[OpenSpec Specs](../../../openspec/specs)
 
 整體開發任務嚴格劃分為 7 大模組、共 16 項具備可驗證性 (Verifiable) 的工程任務：
 

@@ -1,5 +1,7 @@
 # 日常流水帳系統 (Daily Ledger System) — 啟動腳本 (start.ps1) 規格與維運指南
 
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md)  
+
 本文件定義「日常流水帳系統 (Daily Ledger System)」之本機啟動與維運管理腳本（`start.ps1`）的完整設計規格、參數定義、智慧診斷機制與操作手冊。
 
 ---

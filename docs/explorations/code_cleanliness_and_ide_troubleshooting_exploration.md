@@ -5,6 +5,7 @@
 > **模式定位**：探索報告 (Exploration Report / opsx-explore)  
 > **技術棧**：Java 21 / Spring Boot 3.3.13 / Spring Data JPA / Eclipse JDT-LS / Spring Tools 4  
 > **目標範疇**：代碼潔淨規範、IDE 診斷診治、Spring Boot 工具雜訊過濾與 OpenSpec 規範固化  
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md)  
 
 ---
 

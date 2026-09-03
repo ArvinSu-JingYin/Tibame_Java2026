@@ -2,7 +2,7 @@
 
 > **專案代號**：`daily-ledger-system`  
 > **所屬模組**：系統分層架構與類別設計  
-> **相關基準**：[OpenSpec Design](file:///c:/Arvin/COURSE/TibMe緯育/JAVA%20金融微服務/Project3/openspec/changes/daily-ledger-system/design.md)
+> **相關基準**：[OpenSpec Specs](../../../openspec/specs)
 
 ---
 

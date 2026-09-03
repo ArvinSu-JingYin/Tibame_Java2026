@@ -4,7 +4,8 @@
 > **基準變更**：`openspec/changes/daily-ledger-system`  
 > **技術棧**：Spring Boot 3.x ➔ Spring Data JPA ➔ MS SQL Server ➔ Thymeleaf ➔ Vue 3 MVVM (No-CDN Offline) ➔ Swiss Style Design  
 > **報告日期**：2026-09-01  
-> **狀態**：規劃產物完整審查通過 (`Planning Complete`, `Strict Validated`)
+> **狀態**：規劃產物完整審查通過 (`Planning Complete`, `Strict Validated`)  
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md)  
 
 ---
 
