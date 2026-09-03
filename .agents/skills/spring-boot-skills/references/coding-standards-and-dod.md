@@ -73,4 +73,9 @@
 - [ ] **[前端] 嚴格離線 No-CDN**：頁面無任何外網 CDN 依賴，所有靜態庫本地化於 `resources/static/lib/`。
 - [ ] **[前端] 瑞士風格視覺**：嚴格落實直角幾何邊框（0px 圓角）、無模糊陰影、經典瑞士紅輔助色、高對比無襯線排版。
 - [ ] **[前端] 統一非同步與提示**：所有 API 呼叫使用封裝後的 `window.http`，成功/失敗互動統一調用 `window.SwissAlert`。
-- [ ] **[後端] 代碼潔淨與零警告**：全專案 0 未使用 Import，0 孤兒死碼常數，繼承 `JpaRepository` 之介面無多餘 `@Repository`，IDE Problems 零錯誤零警告。
+- [ ] **[品質] 代碼潔淨與零警告 (Zero-Warning DoD)**：
+  - **編譯狀態**：執行 `.\mvnw.cmd clean test-compile` 確保 BUILD SUCCESS。
+  - **單元測試**：執行 `.\mvnw.cmd test` 全套件測試 100% 綠燈通過。
+  - **未使用引用**：全專案 0 未使用 Import（存檔自動組織引用）。
+  - **無用私有欄位**：類別層級之 private 變數與常數皆有明確引用點，0 孤兒死碼。
+  - **Problems 面板**：IDE 問題欄位無任何未解析之紅字 Error 與代碼風格 Warning。
