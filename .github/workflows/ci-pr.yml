@@ -1,0 +1,125 @@
+name: CI - PR Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+jobs:
+  pr-compliance:
+    name: PR Compliance & Specs Validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install OpenSpec CLI
+        run: npm install -g @fission-ai/openspec
+
+      - name: Validate OpenSpec Specifications
+        run: openspec validate --all
+
+      - name: Validate PR Title and Commit Messages Convention
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          node -e '
+          const { execSync } = require("child_process");
+          const prTitle = process.env.PR_TITLE || "";
+          const baseRef = process.env.BASE_REF || "main";
+
+          const CONVENTIONAL_REGEX = /^(feat|fix|refactor|perf|test|style|docs|chore|revert)\((controller|service|repository|entity|dto|config|security|exception|view|common|build|specs)\): .*[一-龥].*$/u;
+
+          let hasError = false;
+          function validate(name, text) {
+            const trimmed = (text || "").trim();
+            if (!trimmed) {
+              console.error(`::error::[FAIL] ${name} 不能為空`);
+              hasError = true;
+              return;
+            }
+            if (trimmed.endsWith(".") || trimmed.endsWith("。")) {
+              console.error(`::error::[FAIL] ${name} 結尾不得包含句號（. 或 。）: "${trimmed}"`);
+              hasError = true;
+              return;
+            }
+            if (!CONVENTIONAL_REGEX.test(trimmed)) {
+              console.error(`::error::[FAIL] ${name} 不符合 Conventional Commits 繁體中文格式: "${trimmed}"`);
+              console.error(`  - 格式範例: feat(controller): 新增每日流水帳控制器`);
+              console.error(`  - 支援 Type: feat, fix, refactor, perf, test, style, docs, chore, revert`);
+              console.error(`  - 支援 Scope: controller, service, repository, entity, dto, config, security, exception, view, common, build, specs`);
+              console.error(`  - 必須包含繁體中文字元，且冒號後需有半形空格`);
+              hasError = true;
+              return;
+            }
+            console.log(`[PASS] ${name}: "${trimmed}"`);
+          }
+
+          console.log("=== 正在校驗 PR 標題 ===");
+          validate("PR Title", prTitle);
+
+          console.log("\n=== 正在校驗 PR 提交歷史 (Commit Messages) ===");
+          let commits = [];
+          try {
+            const logOutput = execSync(`git log origin/${baseRef}..HEAD --no-merges --pretty=format:"%s"`, { encoding: "utf-8" });
+            commits = logOutput.split("\n").map(s => s.trim()).filter(Boolean);
+          } catch (e) {
+            console.warn("警告: 無法透過 origin/" + baseRef + "..HEAD 取得 commit log，嘗試 HEAD~1..HEAD: " + e.message);
+            try {
+              const fallbackOutput = execSync(`git log -1 --pretty=format:"%s"`, { encoding: "utf-8" });
+              commits = fallbackOutput.split("\n").map(s => s.trim()).filter(Boolean);
+            } catch (err) {
+              console.error("無法取得任何 commit 資訊: " + err.message);
+            }
+          }
+
+          if (commits.length === 0) {
+            console.log("未檢測到新的 Commit，跳過 Commit 校驗。");
+          } else {
+            commits.forEach((msg, idx) => {
+              validate(`Commit #${idx + 1}`, msg);
+            });
+          }
+
+          if (hasError) {
+            console.error("\n[REJECT] 提交訊息或 PR 標題校驗失敗，阻擋合併。請修正後重新推送。");
+            process.exit(1);
+          }
+          console.log("\n[SUCCESS] PR 標題與所有 Commit 訊息皆符合規範！");
+          '
+
+  pr-unit-test:
+    name: Fast Unit Test Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Make Maven Wrapper executable
+        run: chmod +x ./mvnw
+
+      - name: Run Unit Tests
+        run: ./mvnw clean test --no-transfer-progress
