@@ -1,206 +1,300 @@
-# 每日記帳系統 (Daily Ledger System) - 整合測試範疇與實施策略探索報告
+# 每日記帳系統 (Daily Ledger System) - 整合測試範疇、實施策略與 SQL Server 介接評估報告
 
-> **文件版本**：v1.0.0  
-> **建立日期**：2026-09-04  
-> **技術棧**：Java 21 / Spring Boot 3.3.3 / JUnit 5 / MockMvc / TestRestTemplate / DataJpaTest / H2 In-Memory DB  
-> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md) ｜ [自動化測試策略 (架構篇)](automated_testing_strategy_and_exploration.md) ｜ [單元測試手冊](../specifications/daily_ledger_system/09_unit_testing_guide_and_test_catalog.md) ｜ [E2E 測試手冊](../specifications/daily_ledger_system/10_e2e_testing_guide_and_operation_manual.md)  
+> **文件版本**：v2.0.0 (架構校準與 SQL Server 介接擴充版)  
+> **更新日期**：2026-09-04  
+> **技術棧**：Java 21 / Spring Boot 3.3.13 / JUnit 5 / MockMvc / TestRestTemplate / Playwright / H2 In-Memory DB (MODE=MSSQLServer) / Microsoft SQL Server 2022  
+> **導覽指引**：[← 返回專案文件總覽門戶 (docs/README.md)](../README.md) ｜ [v1.0 歷史版本存檔](integration_testing_scope_and_strategy_exploration_v1.0.md) ｜ [本地資料庫憑證注入手冊](../specifications/local_database_credentials_and_ide_injection_guide.md) ｜ [自動化測試架構篇](automated_testing_strategy_and_exploration.md) ｜ [單元測試手冊](../specifications/daily_ledger_system/09_unit_testing_guide_and_test_catalog.md) ｜ [E2E 測試手冊](../specifications/daily_ledger_system/10_e2e_testing_guide_and_operation_manual.md)  
 
 ---
 
 ## 1. 探索背景與問題意識 (Executive Summary & Background)
 
-本專案「每日記帳系統（Daily Ledger System）」在工程品質上已落實嚴謹的雙軌驗證機制：
-* **底層單元測試**（54 個案例）：完全基於 Mockito 隔絕外部環境，在 2~5 秒內極速反饋純 Java 運算邏輯。
-* **頂層 E2E 測試**（10 個核心情境）：包含以 `TestRestTemplate` 執行的 API 整合測試與 Playwright 真機 UI 流程驗收。
+本專案「每日記帳系統（Daily Ledger System）」在軟體工程品質上已建立起兩道堅實的自動化防線：
+1. **底層單元測試（Surefire 66 個案例）**：涵蓋密碼學演算法（AES-256-GCM / BCrypt）、密碼政策校驗、JWT 強型別配置治理、YAML 鍵名轉義防禦、自然語言正則解析與業務服務純計算邏輯，在 6 秒內極速反饋。
+2. **頂層 E2E 測試（Failsafe 10 個核心情境）**：涵蓋以 `TestRestTemplate` 執行的 API 整合驗證（Auth / Ledger / TenantIsolation）與以 Playwright 驅動之 Chromium 真機 UI 流程驗收。
 
-然而，在單元測試與頂層 E2E 之間，存在一塊極為關鍵的**測試盲區**：
-1. **單元測試「測不到」真實持久層行為**：單元測試中所有 JPA Repository 皆為 Mock，無法驗證真實 SQL 語法、H2 資料庫方言、`Specification` 動態條件組裝、JPQL 聚合計算（如 `COALESCE(SUM, 0)`）、資料庫唯一性約束（Unique Constraint）與外鍵引用的真實行為。
-2. **單元測試「測不到」安全過濾鏈與交易邊界**：單元測試直接調用 Service 方法傳入 `userId`，無法驗證 `JwtAuthenticationFilter` 在遭遇無 Token、畸形 Token 或過期 Token 時是否能精確阻擋，亦無法檢驗 `@Transactional(rollbackFor = Exception.class)` 在業務拋出異常時是否真實回滾資料庫。
-3. **E2E 測試「難以窮舉邊界且開銷過重」**：頂層真機測試啟動耗時長，若要用 E2E 覆蓋所有 DTO 欄位校驗、日期邊界與跨實體約束錯誤，將導致建置流水線過度緩慢。
+然而，在純 Java 邏輯的單元測試與開銷較重的頂層 E2E 之間，存在一塊極為關鍵的**測試盲區（Testing Gap）**：
+* **單元測試「測不到」真實持久層行為**：單元測試中所有 JPA Repository 皆為 Mockito 打樁，無法驗證真實 SQL 語法、H2/MSSQL 方言、`Specification` 動態條件組裝、JPQL 聚合計算（如 `COALESCE(SUM, 0)`）、資料庫唯一性約束（Unique Constraint）與外鍵引用的真實級聯行為。
+* **單元測試「測不到」自訂安全過濾鏈與交易邊界**：單元測試直接調用 Service 方法傳入 `userId`，無法驗證未授權請求穿越過濾器進入 Controller 呼叫 `requireUserId()` 觸發 401 的完整鏈路，亦無法檢驗 `@Transactional(rollbackFor = Exception.class)` 在業務拋出異常時是否真實回滾資料庫。
+* **頂層 E2E 測試「難以窮舉邊界且開銷過重」**：既有 E2E API 測試運行於真實隨機 Port，主要聚焦於「黃金業務旅程（Happy Path）」。若將所有 DTO `@Valid` 邊界校驗、畸形 Token 攔截、跨實體刪除衝突等負向場景皆由 E2E 覆蓋，將導致建置時間過長，且難以精準斷言 Controller 層級的例外細節。
 
-因此，構建完善的**整合測試（Integration Testing）**體系，是鞏固系統穩定度、確保多租戶隔離防禦與資料一致性的必要環節。
-
----
-
-## 2. 整合測試架構與檢驗分層
-
-整合測試聚焦於驗證「組件之間的真實協同」與「跨層契約的正確性」：
-
-```
-+-----------------------------------------------------------------------------+
-|                          整合測試檢驗邊界與組件流向                         |
-+-----------------------------------------------------------------------------+
-|                                                                             |
-|   [ HTTP 測試端點 (MockMvc / TestRestTemplate) ]                            |
-|        |                                                                    |
-|        v                                                                    |
-|   [ 1. 安全過濾鏈 ] --> JwtAuthenticationFilter (Token 解析 / 拒絕 / 畸形)   |
-|        |                                                                    |
-|        v                                                                    |
-|   [ 2. 請求上下文 ] --> UserContext (ThreadLocal 注入 / 隔離 / 清理)         |
-|        |                                                                    |
-|        v                                                                    |
-|   [ 3. 控制器層 ]   --> ApiController (@Valid 參數校驗 / DTO 綁定)           |
-|        |                                                                    |
-|        v                                                                    |
-|   [ 4. 業務交易層 ] --> ServiceImpl (@Transactional 回滾 / 跨實體業務邏輯)   |
-|        |                                                                    |
-|        v                                                                    |
-|   [ 5. 持久層/DB ]  --> JpaRepository (真實 SQL / Specification 動態條件 /   |
-|                          外鍵約束 / 聚合 SUM 統計 / 唯一鍵衝突)             |
-|                                                                             |
-+-----------------------------------------------------------------------------+
-```
+因此，構建完善的**整合測試（Integration Testing）**體系，並確立**介接 Microsoft SQL Server** 的具體測試策略，是鞏固系統穩定度、確保多租戶隔離防禦與資料一致性的必要環節。
 
 ---
 
-## 3. 整合測試檢驗範疇矩陣 (6 大核心維度)
+## 2. 核心架構機制校正：安全防護鏈真實流向 (Security Architecture Reality)
 
-針對目前系統已實作之功能，整合測試應當重點覆蓋以下 6 大維度：
+在整合測試的設計中，必須精確對齊專案的真實安全性架構。本專案採用自訂輕量安全過濾架構（無重量級 Spring Security Web Filter Chain 依賴）：
 
 ```
-+-----------------------------------------------------------------------------+
-|                         整合測試六大核心範疇全景                            |
-+-----------------------------------------------------------------------------+
-|                                                                             |
-|   1. 身分認證與過濾器防線   4. 資料庫交易與回滾原子性                       |
-|      (Filter/Token/401)        (@Transactional Rollback)                    |
-|                                                                             |
-|   2. 分類管理與關聯完整性   5. 跨租戶水平越權防護 (IDOR)                    |
-|      (is_system/409/引用阻擋)  (findByIdAndUserId / 404/403)                |
-|                                                                             |
-|   3. 流水帳計算與動態查詢   6. 系統開機初始化相容性                         |
-|      (Specification/JPQL/精確度)(DataInitializer 冪等性)                    |
-|                                                                             |
-+-----------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------+
+|                               安全防護鏈與例外轉譯真實鏈路全景                                     |
++----------------------------------------------------------------------------------------------------+
+|                                                                                                    |
+|  [ HTTP 請求 (MockMvc) ]                                                                           |
+|       |                                                                                            |
+|       v                                                                                            |
+|  [ 1. JwtAuthenticationFilter ] (OncePerRequestFilter)                                             |
+|       | - 解析 Header: Authorization: Bearer <token>                                               |
+|       | - 若合法: 解析 userId/username 寫入 UserContext (ThreadLocal)                               |
+|       | - 若無 Token 或 Token 畸形/過期: 不中斷請求，直接放行 (filterChain.doFilter)               |
+|       v                                                                                            |
+|  [ 2. 進入 ApiController 端點 ]                                                                    |
+|       | - 先觸發 Spring MVC @Valid 參數校驗 (若不符規則直接拋出 MethodArgumentNotValidException)   |
+|       | - 業務開頭顯式呼叫: Long userId = UserContext.requireUserId();                             |
+|       | - 若 UserContext 為 null ➔ 拋出 UnauthorizedException(401)                                 |
+|       v                                                                                            |
+|  [ 3. 業務服務層 ServiceImpl ]                                                                     |
+|       | - 執行 @Transactional 業務邏輯、多租戶隔離查詢、跨實體約束校驗                             |
+|       v                                                                                            |
+|  [ 4. 全域例外處理 GlobalExceptionHandler ]                                                        |
+|       | - 攔截 UnauthorizedException / ApiException ➔ 封裝為標準 ApiResponse(code, message)        |
+|       | - 攔截 MethodArgumentNotValidException ➔ 封裝為標準 ApiResponse(400, "第一筆欄位錯誤訊息") |
+|       v                                                                                            |
+|  [ 5. Filter finally 區塊 ]                                                                        |
+|       | - 強制執行 UserContext.clear() 銷毀 ThreadLocal，徹底防禦執行緒池身分洩漏                   |
+|                                                                                                    |
++----------------------------------------------------------------------------------------------------+
 ```
 
-### 3.1 身分認證與授權防護鏈 (Authentication & Security Integration)
-* **待測組件**：`JwtAuthenticationFilter`、`TokenService`、`UserContext`、`AuthApiController`、`GlobalExceptionHandler`。
-* **核心驗證場景**：
-  1. **未授權攔截**：請求受保護端點時未帶 `Authorization` Header 或為空 ➔ 驗證回傳 `401 Unauthorized`，且**絕對不進入 Controller**。
-  2. **畸形與無效 Token 阻擋**：缺少 `Bearer ` 前綴、非法字元、無效簽名或過期 Token ➔ 驗證回傳 401。
-  3. **白名單放行**：`/api/v1/auth/login`、`/api/v1/auth/register`、靜態資源 `/lib/**` 無需 Token 即可順暢存取。
-  4. **ThreadLocal 記憶體隔離與清理**：在 Filter 的 `finally` 區塊強制調用 `UserContext.clear()`，驗證在高併發或線程池重用情境下無身分洩漏。
-  5. **DTO 參數驗證轉譯**：註冊密碼強度不足（缺大寫或特殊字元）、帳號為空等 ➔ 驗證 `@Valid` 攔截，由 `GlobalExceptionHandler` 封裝為標準 `ApiResponse(400, "密碼必須包含...")`。
-
-### 3.2 分類管理與資料完整性約束 (Category & Integrity Integration)
-* **待測組件**：`CategoryApiController`、`CategoryServiceImpl`、`CategoryRepository`。
-* **核心驗證場景**：
-  1. **混合分類查詢 (System + Custom)**：查詢 `GET /api/v1/categories?type=EXPENSE` 時，返回「系統預設分類 (`is_system = true`) + 該用戶自訂分類」，且完全過濾其他使用者的私有分類。
-  2. **同用戶分類唯一性 (409 Conflict)**：同一使用者在同一收支類型下建立重複名稱分類 ➔ 驗證拋出 409；不同使用者建立同名分類 ➔ 驗證正常允許。
-  3. **系統預設分類防竄改**：嘗試對 `is_system = true` 的分類調用 `PUT` 或 `DELETE` ➔ 驗證拋出 `403 Forbidden`。
-  4. **跨實體引用刪除防護 (關鍵整合點)**：
-     * 當分類已被 `AccountRecord` 引用時，嘗試刪除該分類 ➔ 驗證觸發 `accountRecordRepository.countByCategoryId(id) > 0`，拋出 409 衝突拒絕刪除。
-     * 將關聯記帳刪除後 ➔ 再次刪除分類應成功執行並從資料庫抹除。
-
-### 3.3 流水帳核心業務、金額精度與動態查詢 (Ledger Records & Dynamic Query)
-* **待測組件**：`RecordApiController`、`LedgerServiceImpl`、`AccountRecordRepository`、`RegexSmartParserServiceImpl`。
-* **核心驗證場景**：
-  1. **收支類型與分類匹配校驗**：若記帳類型為 `INCOME` 但選用 `EXPENSE` 分類 ➔ 驗證拋出 400 Bad Request。
-  2. **跨用戶分類引用防護**：用戶 A 記帳時若故意帶入用戶 B 的私有分類 ID ➔ 驗證 `findAvailableById` 判定無權存取，拒絕寫入。
-  3. **金額運算精度 (BigDecimal)**：
-     * 邊界值驗證：金額為 0 或負數被 `@DecimalMin("0.01")` 攔截。
-     * 大金額（如 `99,999,999.99`）於 H2/MySQL 存取不產生溢位或捨入誤差。
-  4. **JPA Specification 動態多條件組合（單元測試無法驗證）**：
-     * 驗證 `startDate`、`endDate`、`recordType`、`categoryId`、`keyword` 模糊搜尋多條件動態拼接。
-     * 驗證分頁 `Pageable` 倒序排序（`recordDate DESC, id DESC`）之真實 SQL 語法與分頁結果正確性。
-  5. **月度統計聚合 (JPQL COALESCE & SUM)**：
-     * 呼叫 `sumAmountByUserIdAndRecordTypeAndDateRange`：當月無紀錄時，驗證 `COALESCE(SUM, 0)` 正確回傳 0，不產生空指針。
-     * 跨月邊界（如 1/31 與 2/1）資料篩選嚴密性與 `netBalance` 收支淨值計算。
-  6. **自然語言智慧記帳整合**：呼叫 `/api/v1/records/quick` 傳入「午餐 120」➔ 驗證解析、推導分類、最終落庫並可被查詢。
-
-### 3.4 資料庫交易與回滾原子性 (Transaction & Atomicity Integration)
-* **待測組件**：服務層標註 `@Transactional(rollbackFor = Exception.class)` 之方法。
-* **核心驗證場景**：
-  * 模擬在業務流程中途拋出 `ApiException` 或 `RuntimeException` 時，驗證前面已執行的 JPA 異動是否 100% 回滾，資料庫絕不留下半套殘留資料。
-
-### 3.5 跨租戶橫向越權攻擊穿透防護 (Tenant Isolation / IDOR Security)
-* **待測組件**：全 API 端點與資料存取層。
-* **核心驗證場景**：
-  * 用戶 B 嘗試讀取、修改或刪除用戶 A 的分類與流水帳紀錄 ➔ 驗證底層查詢強制綁定 `findByIdAndUserId(id, userId)`，一律回傳 404 Not Found 或 403 Forbidden，杜絕物件引用越權（IDOR）。
-
-### 3.6 系統啟動預設資料與相容性 (Bootstrap & Schema Integration)
-* **待測組件**：`DataInitializer`、`AppConfig`。
-* **核心驗證場景**：
-  * **冪等性 (Idempotency)**：全新資料庫開機自動植入 11 筆系統預設分類；二次開機或重複執行時略過，確保不引發主鍵重複或資料重複膨脹。
+> **關鍵架構結論**：  
+> 未授權請求（無 Token 或偽造 Token）**並非在 Filter 階段被阻斷，而是完整通過 Filter 進入 Controller 後，由 `UserContext.requireUserId()` 拋出 `UnauthorizedException`，最終由 `GlobalExceptionHandler` 統一轉譯為 HTTP 401 回應**。整合測試的斷言設計必須忠實反映此流向。
 
 ---
 
-## 4. 實施途徑深度評估 (Approach A vs Approach B)
+## 3. 測試分工金字塔與整合測試 7 大核心盲區
 
-在落實整合測試時，主流有兩種技術架構策略：
+為了杜絕測試冗餘，系統三層測試體系的分工邊界劃分如下：
 
 ```
 +-----------------------------------------------------------------------------------+
-|               途徑 A：切片整合測試 vs 途徑 B：全上下文整合測試                    |
+|                           專案三層測試體系職責精準劃分                            |
 +-----------------------------------------------------------------------------------+
 |                                                                                   |
-|   途徑 A (Slice Testing)                途徑 B (Full Context Testing)             |
-|   - @WebMvcTest (Mock Service)          - @SpringBootTest (真實組裝)              |
-|   - @DataJpaTest (Mock DB/僅測 SQL)     - MockMvc / TestRestTemplate              |
+|   [ 頂層：E2E 端到端測試 (Playwright & TestRestTemplate) ]                         |
+|   - 檔案：*E2ETest.java                                                           |
+|   - 模式：黑箱真實 HTTP (RANDOM_PORT) / 真機 Chromium 瀏覽器                        |
+|   - 任務：驗收「黃金業務旅程 (Happy Path)」與全站 UI 渲染                         |
 |                                                                                   |
-|   [優點]                                [優點]                                    |
-|   + 速度極快 (單切片 1~2 秒)            + 真實度最高 (High Fidelity)              |
-|   + 邊界/異常輸入測試成本低             + 零 Mock 成本，無契約脫節風險            |
-|   + 精準定位失敗層級                    + 原生驗證 Filter 鏈與 UserContext        |
-|                                         + 完整驗證 Transaction 回滾與跨實體約束   |
+|   [ 中層：整合測試 (Spring Boot Test + MockMvc) ]  <--- 【本次擬議核心】          |
+|   - 檔案：*IT.java                                                                |
+|   - 模式：灰箱記憶體 DispatcherServlet，結合真實 Service / Repository / 資料庫     |
+|   - 任務：專攻「邊界條件、異常攔截、跨實體約束、動態查詢與交易回滾」               |
 |                                                                                   |
-|   [缺點]                                [缺點]                                    |
-|   - Mock 負擔大 (Mock Fatigue)          - 啟動耗時較長 (約 4~8 秒)                |
-|   - 契約脫節引發「虛假綠燈」            - 需管理 H2 資料庫狀態與清理機制          |
-|   - 無法驗證 Filter 與交易回滾          - 故障排查需順藤摸瓜                      |
+|   [ 底層：單元測試 (JUnit 5 + Mockito) ]                                          |
+|   - 檔案：*Test.java (目前 66 案例)                                               |
+|   - 模式：純白箱，無 Spring 容器，極速反饋 (Surefire ~6 秒)                       |
+|   - 任務：演算法、密碼學、自然語言正則解析、配置與元數據治理                       |
 |                                                                                   |
 +-----------------------------------------------------------------------------------+
 ```
 
-### 綜合維度評估對照表
+### 整合測試（IT）應專門補足的 7 大核心檢驗維度
 
-| 評估維度 | 途徑 A：切片整合測試 (`@WebMvcTest` + `@DataJpaTest`) | 途徑 B：全上下文整合測試 (`@SpringBootTest` + `MockMvc`) |
-| :--- | :--- | :--- |
-| **執行反饋速度** | **極快**（單切片通常 1~2 秒完成，只載入局部 Bean） | **中等**（完整啟動 Context 約 4~8 秒，若重用 Context 則後續較快） |
-| **Mock 負擔** | **高**（`@WebMvcTest` 需逐一 `@MockBean` Service；`@DataJpaTest` 無法測 Service 邏輯） | **零或極低**（各層直接真實注入，無需撰寫冗長的 Mock 打樁程式碼） |
-| **全鏈路真實度** | **中等**（各層分別隔離，難以驗證跨層協同契約變更） | **極高**（真實貫穿 Filter ➔ Controller ➔ Service ➔ Repo ➔ H2） |
-| **安全過濾鏈檢驗** | **較困難**（需手動將 `JwtAuthenticationFilter` 與 `TokenService` 納入 Web 切片） | **極佳**（原生支援完整 Filter 鏈與 `UserContext` 生命週期） |
-| **業務交易 (`@Transactional`)** | **無法驗證**（Service 被 Mock，無法測試拋錯時的真實 Rollback 行為） | **完整支援**（真實檢驗 RuntimeException 觸發的交易回滾與原子性） |
-| **跨實體約束檢驗** | **僅能單點驗證**（無法測「刪除分類時檢查流水帳引用」之真實連動） | **完整支援**（先建帳再刪分類，能真實驗證 `countByCategoryId` 攔截） |
-| **SQL / Specification 支援** | **完美支援**（`@DataJpaTest` 專注於 Criteria 組合查詢與語法） | **完整支援**（直接透過 H2 執行完整 SQL 與聚合查詢） |
-| **故障定位難易度** | **容易精準定位**（Web 切片報錯必屬 HTTP/校驗；JPA 切片報錯必屬 SQL） | **需順藤摸瓜**（失敗時可能需排查 Filter、Service 業務條件或 DB 約束） |
+```
++-----------------------------------------------------------------------------------+
+|                             整合測試 7 大核心檢驗盲區                             |
++-----------------------------------------------------------------------------------+
+|                                                                                   |
+|  1. JPA Specification 動態多條件組合查詢 (模糊搜尋/分頁/倒序)                     |
+|  2. 跨實體引用刪除防護 (引用分類刪除拋 409，刪除記帳後允許刪除)                   |
+|  3. Controller @Valid 參數校驗與例外轉譯格式 (密碼強度/負數金額)                  |
+|  4. 安全防護邊界 (偽造 Token/過期 Token/無 Bearer 前綴回傳 401)                    |
+|  5. 分類唯一性與租戶隔離 (同用戶同名 409 衝突 vs 不同用戶同名允許)                 |
+|  6. 系統預設分類保護 (is_system=true 嘗試修改/刪除回傳 403)                        |
+|  7. 月度統計聚合邊界 (無資料時 COALESCE 回傳 0.00，跨月精準過濾)                   |
+|                                                                                   |
++-----------------------------------------------------------------------------------+
+```
+
+1. **JPA Specification 動態多條件組合查詢**：
+   * 待測端點：`GET /api/v1/records`。
+   * 檢驗點：`startDate`、`endDate`、`recordType`、`categoryId`、`keyword` 模糊搜尋多條件動態拼接。驗證 `PageRequest` 倒序排序（`recordDate DESC, id DESC`）之真實 SQL 語法與分頁結果正確性（單元測試因 Repository 被 Mock 而完全測不到此處）。
+2. **跨實體引用刪除防護（關鍵業務約束）**：
+   * 待測端點：`DELETE /api/v1/categories/{id}`。
+   * 檢驗點：當分類已被 `AccountRecord` 引用時，嘗試刪除該分類 ➔ 驗證觸發 `accountRecordRepository.countByCategoryId(id) > 0`，拋出 409 Conflict 衝突阻擋；先刪除關聯記帳後再次刪除分類 ➔ 驗證成功刪除 (200 OK)。
+3. **Controller `@Valid` 參數校驗與例外轉譯格式**：
+   * 待測端點：`/api/v1/auth/register`、`/api/v1/records`。
+   * 檢驗點：註冊密碼未達 6 碼或缺少特殊符號、金額小於等於 0 或小數點超過 2 位 ➔ 驗證由 `GlobalExceptionHandler` 封裝回傳標準 `ApiResponse(400, "...")` 格式。
+4. **安全防護邊界（Token 異常攔截）**：
+   * 待測端點：受保護之 `/api/v1/auth/me`、`/api/v1/categories` 等。
+   * 檢驗點：無 Header、無 `Bearer ` 前綴、非法字元、過期 Token 或竄改簽名之 Token ➔ 驗證一律回傳 401 Unauthorized。
+5. **分類唯一性與租戶隔離**：
+   * 待測端點：`POST /api/v1/categories`。
+   * 檢驗點：同一個使用者在同一收支類型下建立同名分類 ➔ 拋出 409 Conflict；不同使用者建立同名自訂分類 ➔ 允許成功建立 (201 Created)。
+6. **系統預設分類防竄改**：
+   * 待測端點：`PUT /api/v1/categories/{id}`、`DELETE /api/v1/categories/{id}`。
+   * 檢驗點：對 `is_system = true` 的系統分類嘗試修改或刪除 ➔ 驗證拋出 403 Forbidden。
+7. **月度統計聚合 (JPQL COALESCE & SUM) 邊界**：
+   * 待測端點：`GET /api/v1/records/summary`。
+   * 檢驗點：當月完全無任何記帳紀錄時，驗證 `COALESCE(SUM, 0)` 安全回傳 `0.00` 而非 null 或拋出異常；驗證跨月（如 1/31 與 2/1）資料過濾的精確度。
 
 ---
 
-## 5. 本專案最佳實踐策略 (Hybrid 混合架構)
+## 4. 實施途徑評估重審：Spring Context 快取開銷與單一 Context 架構
 
-綜合評估本專案「後端四層嚴格解耦」、「自訂安全過濾鏈」與「多租戶嚴格隔離」之架構特徵，建議採取 **Hybrid（混合）測試策略**：
+在規劃整合測試架構時，必須深入考量 Spring TestContext Framework 的**上下文快取（Context Caching）機制**：
 
 ```
 +-----------------------------------------------------------------------------------+
-|                         專案推薦之測試策略分工 (Hybrid Strategy)                  |
+|                     Spring Context 快取效能對比 (Context Caching)                 |
 +-----------------------------------------------------------------------------------+
 |                                                                                   |
-|  1. [ 主力防線 ] @SpringBootTest + MockMvc                                        |
-|     - 用途：全鏈路 API 整合測試 (覆蓋認證過濾、Controller、Service、交易回滾、H2)  |
-|     - 特點：以記憶體 DispatcherServlet 調用，不佔用真實埠，速度比 E2E 快數倍      |
-|     - 範例：AuthIntegrationIT、CategoryIntegrationIT、LedgerIntegrationIT        |
+|  [ 途徑 A：混合切片架構 (已否決) ]                                                |
+|    AuthIT (@SpringBootTest) ──────┐ (共用 Context #1, ~4s)                        |
+|    CategoryIT (@SpringBootTest) ──┘                                               |
+|    RecordRepoIT (@DataJpaTest) ───> [ 強制新建 Context #2, 額外 +3s ] (破壞快取)  |
 |                                                                                   |
-|  2. [ 專門武器 ] @DataJpaTest (輕量持久層切片)                                    |
-|     - 用途：專案最複雜的 AccountRecordRepository Specification 動態條件查詢        |
-|     - 特點：利用 H2 記憶體 DB 極速驗證 Criteria 多條件排列組合與 JPQL COALESCE 聚合 |
-|     - 範例：AccountRecordRepositoryIT                                             |
+|  [ 途徑 B：單一全上下文架構 (專案最佳推薦) ]                                      |
+|    AuthIT ────────┐                                                               |
+|    CategoryIT ────┼──> 共用唯一 ApplicationContext (僅啟動一次，~4s)              |
+|    LedgerIT ──────┤    後續所有測試類別共用快取，每個測試方法僅需數十毫秒！       |
+|    RecordRepoIT ──┘                                                               |
 |                                                                                   |
-|  3. [ 既有防線維持 ]                                                              |
-|     - 純單元測試 (Surefire 54 案例)：毫秒級極速反饋業務公式與加密演算法           |
-|     - 真機 E2E 測試 (Playwright 5 類別)：交付前全站 UI 渲染與使用者旅程驗收        |
++-----------------------------------------------------------------------------------+
+```
+
+### 為什麼放棄獨立的 `@DataJpaTest` 切片？
+1. **快取破壞懲罰**：當測試套件中同時存在 `@SpringBootTest` 與 `@DataJpaTest` 時，Spring 判定兩者配置切片不同，**被迫啟動兩套完全獨立的 Spring 容器**。這會額外增加 3~5 秒冷啟動開銷，並佔用兩倍記憶體。
+2. **全上下文已涵蓋持久層**：在 `@SpringBootTest(webEnvironment = MOCK)` 容器中，所有 JPA Repository、實體映射與 H2 資料庫本就已經完整就緒。我們**完全可以直接在全上下文中注入 `AccountRecordRepository`** 測試 Specification 動態查詢，既享有一致的環境，又能 100% 複用同一個 Context 快取。
+
+### `@Transactional` 自動回滾與資料庫無污染保證
+* 在 `MockMvc`（WebEnvironment.MOCK）架構下，測試執行緒與請求處於同一個 Thread。
+* 測試類別標註 `@Transactional` 時，每個測試方法結束後 Spring 會**自動執行 ROLLBACK**。
+* 這意味著測試新增的使用者、分類與記帳資料在測試結束時立即抹除，資料庫永遠維持開機時 `DataInitializer` 植入的 11 筆系統分類純淨狀態，**完全不需使用破壞快取的 `@DirtiesContext`**。
+
+---
+
+## 5. 介接 Microsoft SQL Server 資料庫之測試策略與防坑實踐
+
+專案的核心目標資料庫為 **Microsoft SQL Server**。雖然日常測試使用 H2 `MODE=MSSQLServer` 極快，但面對真實生產環境，仍需考慮 SQL Server 的特殊機制。
+
+### 5.1 H2 模擬的 4 大盲區
+1. **識別列跳號（IDENTITY Column & Rollback）**：SQL Server 在交易回滾後，`IDENTITY(1,1)` 序號**不會退回**。若測試斷言寫死 `id == 1`，只要前續有交易回滾，後續測試必將失敗。
+2. **定序與中文編碼（Collation）**：SQL Server 的 `Chinese_Taiwan_Stroke_CI_AS` 之大小寫不敏感、全形/半形處理與 `NVARCHAR` 排序規則，H2 無法完全重現。
+3. **併發鎖定與隔離層級（Locking & Isolation）**：SQL Server 預設為鎖定型 `READ COMMITTED`（或需手動開啟 RCSI），而 H2 是單純的記憶體 MVCC，無法測出 SQL Server 上的 Deadlock 或鎖等待超時。
+4. **方言與驅動程式特性**：Hibernate 對 `SQLServerDialect` 產生的 `OFFSET FETCH` 分頁、日期計算函數與 JDBC 參數 Unicode 轉譯（`sendStringParametersAsUnicode=true`）。
+
+---
+
+### 5.2 介接 SQL Server 的 3 大實施途徑對比
+
+```
++----------------------------------------------------------------------------------------------------+
+|                                    SQL Server 測試三大途徑全景                                     |
++----------------------------------------------------------------------------------------------------+
+|                                                                                                    |
+|  [ 途徑 A：Testcontainers ]          [ 途徑 B：專屬 Test Profile ]       [ 途徑 C：CI Service 容器 ] |
+|  - 測試執行時動態拉起 Docker 容器    - 對接本機/既有運行的 SQL Server    - GitHub Actions CI 原生外掛|
+|  - Spring Boot 3.1+ @ServiceConn     - 配合環境變數與 launch.json 注入   - 主分支合併時背景運行      |
+|                                                                                                    |
+|  [優點]                              [優點]                              [優點]                      |
+|  + 拋棄式環境，100% 乾淨無污染       + 啟動 0 秒延遲 (背景已在跑)        + 開發者電腦不需 Docker     |
+|  + 本機不需預先安裝 SQL Server       + 最貼近本機日常開發手感            + CI 流程自動化，全團隊一致 |
+|                                                                                                    |
+|  [缺點]                              [缺點]                              [缺點]                      |
+|  - 需 Docker 環境                    - 需手動維護測試庫與帳密            - 僅限 CI 環境，本機無法    |
+|  - 首次拉取映像檔耗時 (~1.5GB)       - 開發者環境不一致可能導致假失敗      隨選即跑                  |
+|                                                                                                    |
++----------------------------------------------------------------------------------------------------+
+```
+
+#### 途徑 A：Testcontainers 容器化隨選即用（雲原生標準）
+* **機制**：引入 `org.testcontainers:mssqlserver` 與 `spring-boot-testcontainers`。測試啟動時自動透過 Docker 啟動 `mcr.microsoft.com/mssql/server:2022-latest`，並透過 Spring Boot 3.1+ 的 `@ServiceConnection` 動態綁定連線資訊。
+* **適用**：具備 Docker 環境，追求 Zero-Configuration「Clone 即測」的現代開發流程。
+
+#### 途徑 B：專屬 Test Profile（對接本地既有 SQL Server，零 Docker 依賴）
+* **機制**：建立 `src/test/resources/application-test-mssql.yml`，對接本地既有 SQL Server 實例上的獨立資料庫 `tibame_account_test`。透過 `./mvnw verify -Dspring.profiles.active=test-mssql -Dit.test="*IT"` 隨選執行。
+* **適用**：本機已安裝 SQL Server 且追求 0 秒啟動延遲的日常深度排查。
+
+#### 途徑 C：GitHub Actions Service Container（CI 深度門禁）
+* **機制**：在 `.github/workflows/ci-main.yml` 中定義 `services.mssql` 官方容器。主分支合併時由 GitHub Actions 自動啟動容器並注入環境變數執行完整驗證。
+* **適用**：CI 自動化全真環境驗收，無需開發者本機維持 Docker 或 SQL Server。
+
+---
+
+### 5.3 介接 SQL Server 測試的四大核心防坑實踐
+
+```
++-----------------------------------------------------------------------------------+
+|                        SQL Server 整合測試防禦最佳實踐                            |
++-----------------------------------------------------------------------------------+
+|                                                                                   |
+|  1. [ 資料庫嚴格隔離 ] ───> 專用 tibame_account_test 庫，絕不可動用開發或正式庫   |
+|                                                                                   |
+|  2. [ 主鍵絕不硬編碼 ] ───> SQL Server IDENTITY 跳號特性，Assert 僅檢驗 isNotNull |
+|                                                                                   |
+|  3. [ 交易自動回滾 ]   ───> 測試方法標註 @Transactional，測完資料庫自動 Rollback  |
+|                                                                                   |
+|  4. [ 開機 DDL 冪等性 ] ───> schema.sql 使用 IF NOT EXISTS，支援重用與平滑升級     |
+|                                                                                   |
++-----------------------------------------------------------------------------------+
+```
+
+1. **資料庫嚴格隔離（Dedicated Test Database）**：
+   * 測試連線資料庫名稱必須為 `tibame_account_test`，絕對禁止指向日常開發庫 `tibame_account`，防止測試過程的自動建表或資料清理抹除開發資料。
+2. **主鍵動態斷言（No Hardcoded IDs）**：
+   * 由於 SQL Server `IDENTITY` 在交易回滾後不退回計數器，**測試斷言嚴禁硬編碼 ID 值（如 `assertEquals(1L, id)`）**，一律斷言 `assertThat(id).isNotNull()` 並以動態取得的 ID 進行後續關聯驗證。
+3. **MockMvc + `@Transactional` 回滾機制**：
+   * 測試方法標註 `@Transactional`，在 SQL Server 上測試結束後發出 `ROLLBACK TRANSACTION`，保證既測到真實 SQL，又不在資料庫殘留髒資料。
+4. **開機 DDL 冪等性支援**：
+   * 專案既有的 `schema.sql` 具備標準 T-SQL 的 `IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '...')` 與 `IDENTITY(1,1)`，確保測試庫初次建立或重複重用皆平滑安全。
+
+---
+
+### 5.4 專案最佳落地架構：三階金字塔分流 (The Tiered Strategy)
+
+```
++-----------------------------------------------------------------------------------+
+|                           專案建議之測試分流決策樹                                |
++-----------------------------------------------------------------------------------+
+|                                                                                   |
+|  [ Level 1：日常秒級回饋 (Local Dev & PR Gate) ]                                  |
+|  - 模式：純單元測試 + H2 (MODE=MSSQLServer) MockMvc IT                            |
+|  - 耗時：~6 秒 (mvn test)                                                         |
+|  - 目的：極速驗證 Java 業務運算、DTO 校驗、過濾器與常規邏輯                       |
+|                                                                                   |
+|  [ Level 2：本機深度除錯 (Local On-Demand Debug) ]                                |
+|  - 模式：切換 application-test-mssql.yml，直連本機已運行的 SQL Server             |
+|  - 耗時：~8 秒                                                                    |
+|  - 目的：排查疑難 SQL 語法、Specification 動態組裝、本地環境真實聯調              |
+|                                                                                   |
+|  [ Level 3：主分支深度驗收 (Main Branch CI / Nightly) ]                           |
+|  - 模式：GitHub Actions Service Container (SQL Server 2022 官方映像)              |
+|  - 耗時：~30 秒 (含容器健康檢查)                                                  |
+|  - 目的：合併至 main 前的最後一道防線，100% 確保 SQL Server 生產環境相容性        |
 |                                                                                   |
 +-----------------------------------------------------------------------------------+
 ```
 
 ---
 
-## 6. 後續推進與工作流建議 (Next Steps & Roadmap)
+## 6. Maven 生命週期與 CI 管線調度配置
 
-1. **命名與生命週期分流**：
-   * 整合測試類別遵循 Maven 標準命名以 `*IT.java` 結尾（如 `CategoryIntegrationIT.java`）。
-   * 納入 Maven Failsafe 生命週期，執行 `mvn verify` 或 `mvn test-compile failsafe:integration-test` 統一調度。
-2. **規格收斂至 OpenSpec**：
-   * 若團隊決定正式編寫整合測試代碼，可透過 `/opsx-propose` 發起 `add-backend-integration-tests` 變更提案，明確定義任務清單與交付產物。
+專案的 `pom.xml` 已具備清晰的測試外掛分流：
+* **`maven-surefire-plugin`**：專門執行單元測試，配置排除 `**/*IT.java` 與 `**/*E2ETest.java`。
+* **`maven-failsafe-plugin`**：專門執行整合與端到端驗收，配置包含 `**/*IT.java` 與 `**/*E2ETest.java`。
+
+### 指令調度速查矩陣
+
+| 驗證情境 | 執行指令 | 涵蓋範疇 | 預期耗時 | 適用場景 |
+| :--- | :--- | :--- | :--- | :--- |
+| **快速單元驗證** | `./mvnw test` | 66 個純單元測試 (Surefire) | 約 5~6 秒 | 本機編碼反饋、PR 快速門禁 (`ci-pr.yml`) |
+| **隨選整合測試** | `./mvnw test-compile failsafe:integration-test -Dit.test="*IT"` | 僅執行 `*IT.java` (MockMvc + H2) | 約 4~6 秒 | 修改 API 控制器、Service 交易或 Specification 時 |
+| **真實 MSSQL 測試**| `./mvnw test-compile failsafe:integration-test -Dspring.profiles.active=test-mssql -Dit.test="*IT"` | 僅執行 `*IT.java` 直連本機 SQL Server | 約 6~8 秒 | 驗證 SQL Server 專有方言與約束時 |
+| **全量深度驗收** | `./mvnw verify` | Surefire + Failsafe (`*IT` + Playwright `*E2ETest`) | 約 20~30 秒 | 主分支合併深度驗收 (`ci-main.yml`) |
+
+---
+
+## 7. 後續推進建議 (Next Steps & Roadmap)
+
+1. **建立整合測試基礎架構**：
+   * 建立 `src/test/java/com/tibame/integration/base/IntegrationTestBase.java`，統一定義 `@SpringBootTest(webEnvironment = MOCK)`、`@AutoConfigureMockMvc`、`@ActiveProfiles("test")` 與 `@Transactional`，作為所有 `*IT.java` 的單一 Context 基礎。
+   * 封裝 `obtainBearerToken(String username, String password)` 輔助方法，簡化測試中的身分模擬。
+2. **分模組落地 7 大盲區測試案例**：
+   * `AuthIntegrationIT.java`：覆蓋註冊、登入、401 攔截與密碼強度 `@Valid` 校驗。
+   * `CategoryIntegrationIT.java`：覆蓋分類唯一性 409、系統分類 403 保護與已有記帳引用刪除防護。
+   * `LedgerIntegrationIT.java`：覆蓋記帳新增、自然語言解析落庫、JPQL 月度統計聚合邊界。
+   * `LedgerSpecificationIT.java`：專門深度檢驗 `AccountRecordRepository` 的多條件動態查詢與倒序分頁。
+3. **收斂至 OpenSpec 變更提案**：
+   * 正式實作時，可透過 `/opsx-propose` 發起 `add-backend-integration-tests` 變更提案，明確定義驗收產物與 DoD 檢核。
