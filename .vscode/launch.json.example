@@ -3,7 +3,7 @@
   "configurations": [
     {
       "type": "java",
-      "name": "Spring Boot: 本機 MSSQL (含自訂密碼)",
+      "name": "Spring Boot: 本機 MSSQL (開發庫 tibame_account)",
       "request": "launch",
       "mainClass": "com.tibame.DailyLedgerApplication",
       "projectName": "daily-ledger-system",
@@ -11,6 +11,18 @@
       "env": {
         "DB_PASSWORD": "1qaz@WSX",
         "DB_USERNAME": "sa"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot: 本機 MSSQL 測試庫 (tibame_account_test)",
+      "request": "launch",
+      "mainClass": "com.tibame.DailyLedgerApplication",
+      "projectName": "daily-ledger-system",
+      "args": "--spring.profiles.active=test-mssql",
+      "env": {
+        "DB_TEST_PASSWORD": "1qaz@WSX",
+        "DB_TEST_USERNAME": "sa"
       }
     },
     {

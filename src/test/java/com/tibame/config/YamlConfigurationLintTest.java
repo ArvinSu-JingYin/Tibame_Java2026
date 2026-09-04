@@ -25,11 +25,12 @@ class YamlConfigurationLintTest {
     private final List<String> targetYamlPaths = List.of(
         "src/main/resources/application.yml",
         "src/main/resources/application-mssql.yml",
-        "src/test/resources/application-test.yml"
+        "src/test/resources/application-test.yml",
+        "src/test/resources/application-test-mssql.yml"
     );
 
     @Test
-    @DisplayName("驗證 application.yml 與 application-test.yml 符合中括號轉義規範")
+    @DisplayName("驗證各環境 YAML 設定檔皆符合中括號轉義規範")
     void testTargetYamlFilesComplyWithEscapingRules() throws Exception {
         Yaml yaml = new Yaml();
         List<String> violations = new ArrayList<>();
