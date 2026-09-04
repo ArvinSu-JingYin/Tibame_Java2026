@@ -80,7 +80,8 @@ bin/
 ### ===================================================================
 ### IDE: Visual Studio Code & Editors (Single Developer)
 ### ===================================================================
-.vscode/
+.vscode/*
+!.vscode/*.example
 *.code-workspace
 .history/
 *~

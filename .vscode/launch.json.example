@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot: 本機 MSSQL (含自訂密碼)",
+      "request": "launch",
+      "mainClass": "com.tibame.DailyLedgerApplication",
+      "projectName": "daily-ledger-system",
+      "args": "--spring.profiles.active=mssql",
+      "env": {
+        "DB_PASSWORD": "1qaz@WSX",
+        "DB_USERNAME": "sa"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Spring Boot: H2 記憶體快速測試模式 (預設)",
+      "request": "launch",
+      "mainClass": "com.tibame.DailyLedgerApplication",
+      "projectName": "daily-ledger-system"
+    }
+  ]
+}
