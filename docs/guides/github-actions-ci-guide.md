@@ -28,9 +28,9 @@ flowchart TD
         PR_Event --> PR_Test["pr-unit-test 任務"]
         
         PR_Comp --> C1["Conventional Commits & 繁中校驗<br>(手動派發自動略過 PR 標題檢查)"]
-        PR_Comp --> C2["OpenSpec validate --all 規格檢驗"]
+        PR_Comp --> C2["OpenSpec validate --all 規格檢驗<br>(Node.js 22 Active LTS)"]
         
-        PR_Test --> T1["JDK 21 + Maven 快取"]
+        PR_Test --> T1["JDK 21 (actions/setup-java@v5) + Maven 快取"]
         PR_Test --> T2["./mvnw clean test (H2 In-Memory)"]
         
         C1 & C2 & T2 --> PR_Pass["PR 品質綠燈 (Required Checks Pass)"]
@@ -39,7 +39,7 @@ flowchart TD
     subgraph Main_Pipeline ["深度驗收管線 (ci-main.yml)"]
         direction TB
         Push_Event["Push / Merge 至 main 或 dev 分支<br>或 手動 workflow_dispatch"] --> Main_Job["main-verify 任務"]
-        Main_Job --> M1["JDK 21 + Maven 快取"]
+        Main_Job --> M1["JDK 21 (actions/setup-java@v5) + Maven 快取"]
         Main_Job --> M2["Playwright 瀏覽器快取 (~/.cache/ms-playwright)"]
         M2 -->|未命中時| M2_Install["install --with-deps chromium"]
         M2 -->|命中或安裝完成| M3["./mvnw clean verify (單元 + 整合 + E2E)"]
@@ -52,8 +52,21 @@ flowchart TD
 
 | 工作流程 (Workflow) | 觸發事件 (Events) | 目標分支 (Branches) | 手動派發 (`workflow_dispatch`) | 核心守門重點與防禦行為 |
 | :--- | :--- | :--- | :---: | :--- |
-| **`ci-pr.yml`**<br>(PR Quality Gate) | `pull_request`<br>(opened, synchronize, reopened, edited) | `main`, `dev` | ✅ 支援 | PR 標題合規、繁中 Commit 格式、OpenSpec 規格檢查、H2 單元測試（手動觸發時具備事件感知，自動略過 PR 標題檢查）。 |
-| **`ci-main.yml`**<br>(Deep Verification) | `push` | `main`, `dev` | ✅ 支援 | 完整 Surefire 單元測試 + Failsafe Playwright E2E 瀏覽器整合測試、Spring Boot JAR 打包、測試報告歸檔。 |
+| **`ci-pr.yml`**<br>(PR Quality Gate) | `pull_request`<br>(opened, synchronize, reopened, edited) | `main`, `dev` | ✅ 支援 | PR 標題合規、繁中 Commit 格式、OpenSpec 規格檢查 (Node.js 22 LTS)、H2 單元測試 (JDK 21)（手動觸發時具備事件感知，自動略過 PR 標題檢查）。 |
+| **`ci-main.yml`**<br>(Deep Verification) | `push` | `main`, `dev` | ✅ 支援 | 完整 Surefire 單元測試 + Failsafe Playwright E2E 瀏覽器整合測試 (JDK 21)、Spring Boot JAR 打包、測試報告歸檔。 |
+
+### 2.2 核心執行期與 Action 標準規範 (Runtimes & Actions Standards)
+
+為確保 CI Runner 長期穩定且杜絕技術債警告，全管線嚴格遵循以下執行期標準：
+
+| 元件名稱 | 宣告版本 | 官方維護狀態 | 核心用途與說明 |
+| :--- | :--- | :--- | :--- |
+| **Runner 環境** | `ubuntu-latest` | 官方標準託管環境 | 底層預設原生使用 Node.js 24 執行期。 |
+| **Java 設置 Action** | `actions/setup-java@v5` | 最新正式版 (Node 24 原生) | 配置 Eclipse Temurin JDK 21，並啟用 `cache: 'maven'`。 |
+| **Node.js 執行期** | `node-version: 22` | **Active LTS (代號 Jod)** | 於 `pr-compliance` 執行 `@fission-ai/openspec validate --all` 及 PR/Commit 規範校驗。 |
+| **倉庫檢出 Action** | `actions/checkout@v4` | 官方正式穩定版 | 支援深層提交歷史檢出 (`fetch-depth: 0`)。 |
+| **快取管理 Action** | `actions/cache@v4` | 官方正式穩定版 | 管理 Playwright 瀏覽器二進位檔快取。 |
+| **產物上傳 Action** | `actions/upload-artifact@v4` | 官方正式穩定版 | 歸檔 Surefire/Failsafe 報告與 Spring Boot 可執行 JAR。 |
 
 ---
 

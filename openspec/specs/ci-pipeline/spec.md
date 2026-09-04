@@ -17,7 +17,7 @@ The CI system SHALL enforce pull request title, commit history, and specificatio
 
 #### Scenario: OpenSpec specification validity verification
 - **WHEN** a pull request is submitted or updated targeting `main` or `dev`, or triggered manually
-- **THEN** the `pr-compliance` job MUST install OpenSpec tooling (`@fission-ai/openspec`) under Node.js 20 and execute `openspec validate --all`, failing the check if any syntax, schema, or incomplete artifact validation errors are detected
+- **THEN** the `pr-compliance` job MUST install OpenSpec tooling (`@fission-ai/openspec`) under Node.js 22 and execute `openspec validate --all`, failing the check if any syntax, schema, or incomplete artifact validation errors are detected
 
 #### Scenario: Manual workflow dispatch execution with defensive title bypass
 - **WHEN** the `ci-pr` workflow is executed manually via `workflow_dispatch` without an active pull request context
