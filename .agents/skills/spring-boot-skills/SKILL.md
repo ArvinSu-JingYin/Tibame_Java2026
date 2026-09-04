@@ -67,9 +67,66 @@ description: "Spring Boot MVC 與 Web API 開發規範，涵蓋後端四層架�
 
 ---
 
-## 4. 核心速查代碼片段 (Cheatsheet)
+## 4. 配置治理與強型別屬性規範 (Configuration Governance & Defense-in-Depth)
 
-### 4.1 後端 Controller 標準結構
+專案嚴格落實防範 YAML 診斷警告與配置錯誤復發的「四道防禦縱深」：
+
+```
++-------------------------------------------------------------------------------+
+|                       防範 YAML 與配置警告的四道防護縱深                      |
++-------------------------------------------------------------------------------+
+|  [第 1 道防線] 規格與 AI 提示詞約束 (OpenSpec Specs & Agent Guidelines)       |
+|      * 規格庫統一定義 Configuration Hygiene 標準與 DoD 門禁                   |
+|      * AI Agent 與開發者嚴格遵守本技能手冊之架構邊界                         |
+|                                                                               |
+|  [第 2 道防線] 機械化自動驗證測試守門 (Automated Verification Test Gate)      |
+|      * YamlConfigurationLintTest：使用 SnakeYAML 掃描 Map 鍵名轉義            |
+|      * ConfigurationMetadataTest：檢驗編譯期 spring-configuration-metadata    |
+|                                                                               |
+|  [第 3 道防線] 架構邊界檢驗 (Architecture Boundary Rules)                     |
+|      * 業務層與組件嚴禁散裝 @Value 注入自訂前綴（如 @Value("${jwt.*}")）       |
+|      * 自訂配置項一律要求建立獨立 @ConfigurationProperties POJO 並納入元資料  |
+|                                                                               |
+|  [第 4 道防線] IDE 檢驗與 Git 提交規範 (IDE Diagnostics & Zero-Warning DoD)   |
+|      * 嚴格執行 Zero-Warning DoD，IDE Problems 面板維持 0 錯誤 0 警告         |
++-------------------------------------------------------------------------------+
+```
+
+### 4.1 強型別 `@ConfigurationProperties` 標準範例
+自訂配置項嚴禁使用散裝 `@Value` 注入，必須宣告獨立配置 POJO：
+```java
+@Getter
+@Setter
+@Component
+@ConfigurationProperties(prefix = "jwt")
+public class JwtProperties {
+    /** JWT 簽署密鑰 */
+    private String secret;
+    /** JWT 權杖有效存活時間 (毫秒) */
+    private Long expirationMs = 86400000L;
+}
+```
+
+### 4.2 YAML Map 鍵名中括號轉義規範
+YAML 映射鍵名若包含點號 `.` 或底線 `_`（例如 `logging.level.*` 或 `properties.hibernate.*`），必須使用中括號 `["..."]` 包裹轉義：
+```yaml
+logging:
+  level:
+    "[com.tibame]": DEBUG
+    "[org.hibernate.SQL]": INFO
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        "[format_sql]": true
+```
+
+---
+
+## 5. 核心速查代碼片段 (Cheatsheet)
+
+### 5.1 後端 Controller 標準結構
 ```java
 @RestController
 @RequestMapping("/api/v1/users")
@@ -90,7 +147,7 @@ public class UserApiController {
 }
 ```
 
-### 4.2 前端 Vue 3 + Axios + SweetAlert2 標準結構
+### 5.2 前端 Vue 3 + Axios + SweetAlert2 標準結構
 ```javascript
 (function() {
     'use strict';
@@ -126,7 +183,7 @@ public class UserApiController {
 })();
 ```
 
-### 4.3 瑞士風格 CSS 核心類別速查
+### 5.3 瑞士風格 CSS 核心類別速查
 - **主色/邊框**：紅色 `--swiss-red: #dc2626`、黑色 `--swiss-black: #111111`、灰底 `--swiss-bg: #f8f9fa`。
 - **直角卡片**：`.swiss-card` (1px solid `#e5e5e5`, 直角, 無模糊投影)。
 - **按鈕**：`.btn-swiss-primary` (紅底白字/直角/黑 Hover)、`.btn-swiss-outline` (黑線框/直角/黑 Hover)、`.btn-swiss-danger` (紅字線框/紅 Hover)。
@@ -135,6 +192,7 @@ public class UserApiController {
 
 ---
 
-## 5. 相關規範與文件指引
+## 6. 相關規範與文件指引
 
 深入學習或查閱特定模組之完整代碼與規範，請參閱 [references/](file:///c:/Arvin/COURSE/TibMe%E7%B7%AF%E8%82%B2/JAVA%20%E9%87%91%E8%9E%8D%E5%BE%AE%E6%9C%8D%E5%8B%99/Project3/.agents/skills/spring-boot-skills/references) 目錄下的各專業文檔。
+

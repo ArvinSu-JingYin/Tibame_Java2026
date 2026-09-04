@@ -34,6 +34,11 @@
 - **靜態正則與常數規範**：所有正則表達式（`Pattern`）必須以 `private static final` 宣告於類別層級快取，嚴禁在方法內重複 `Pattern.compile`；重構時嚴禁遺留未引用的死碼欄位。
 - **單元測試修飾詞規範**：JUnit 5 測試類別與測試方法一律採套件預設可見性（不加 `public`）。
 
+### 1.4 配置治理與注入邊界規範
+- **禁止散裝 `@Value` 注入**：自訂配置屬性（如 `jwt.*`、`crypto.*` 等）一律封裝為獨立 `@ConfigurationProperties` 類別，**嚴禁**在 Controller、Service 或其他業務組件中散裝使用 `@Value("${...}")` 注入階層式屬性。
+- **YAML Map 鍵名轉義**：YAML 設定檔中的 Map 鍵名若包含點號 `.` 或底線 `_`（如 `logging.level.*`、`properties.hibernate.*`），必須使用中括號轉義 `["..."]`。
+- **元資料自動生成**：專案整合 `spring-boot-configuration-processor`，所有 `@ConfigurationProperties` 必須於編譯期產出元資料，供 IDE 智慧補全與類型驗證。
+
 ---
 
 ## 2. 前端開發規範 (Frontend Conventions)
@@ -70,12 +75,15 @@
 - [ ] **[後端] 四層架構分界**：MVC Controller 與 Web API Controller 邊界清晰，Controller 無直接注入 Repository。
 - [ ] **[後端] 事務與異常規範**：Service 層事務邊界正確宣告，業務錯誤統一拋出自定義 `BusinessException`。
 - [ ] **[後端] API 響應結構**：所有 Web API 一律返回標準 `ApiResponse<T>`，包含 `code`, `success`, `message`, `data`, `timestamp`。
+- [ ] **[後端] 配置治理與強型別注入**：自訂屬性一律使用 `@ConfigurationProperties`，無散裝 `@Value` 注入；YAML Map 鍵名完成中括號轉義。
 - [ ] **[前端] 嚴格離線 No-CDN**：頁面無任何外網 CDN 依賴，所有靜態庫本地化於 `resources/static/lib/`。
 - [ ] **[前端] 瑞士風格視覺**：嚴格落實直角幾何邊框（0px 圓角）、無模糊陰影、經典瑞士紅輔助色、高對比無襯線排版。
 - [ ] **[前端] 統一非同步與提示**：所有 API 呼叫使用封裝後的 `window.http`，成功/失敗互動統一調用 `window.SwissAlert`。
+- [ ] **[品質] 自動化驗證測試守門**：`YamlConfigurationLintTest` 與 `ConfigurationMetadataTest` 100% 綠燈通過。
 - [ ] **[品質] 代碼潔淨與零警告 (Zero-Warning DoD)**：
   - **編譯狀態**：執行 `.\mvnw.cmd clean test-compile` 確保 BUILD SUCCESS。
   - **單元測試**：執行 `.\mvnw.cmd test` 全套件測試 100% 綠燈通過。
   - **未使用引用**：全專案 0 未使用 Import（存檔自動組織引用）。
   - **無用私有欄位**：類別層級之 private 變數與常數皆有明確引用點，0 孤兒死碼。
   - **Problems 面板**：IDE 問題欄位無任何未解析之紅字 Error 與代碼風格 Warning。
+
