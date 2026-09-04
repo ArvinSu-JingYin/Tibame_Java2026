@@ -1,12 +1,13 @@
 package com.tibame.common.crypto.token.impl;
 
 import com.tibame.common.crypto.token.TokenService;
+import com.tibame.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -23,9 +24,12 @@ public class JwtTokenServiceImpl implements TokenService {
     private final SecretKey key;
     private final long expirationMs;
 
-    public JwtTokenServiceImpl(
-            @Value("${jwt.secret:SwissLedgerSecureJwtKeyForDailyAccountBookSystem2026!#SwissLedger2026}") String secret,
-            @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
+    @Autowired
+    public JwtTokenServiceImpl(JwtProperties jwtProperties) {
+        this(jwtProperties.getSecret(), jwtProperties.getExpirationMs());
+    }
+
+    public JwtTokenServiceImpl(String secret, long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
         log.info("初始化 JWT 權杖簽署服務 (HMAC-SHA, Expiration: {} ms)", expirationMs);

@@ -86,6 +86,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Spring Boot Configuration Annotation Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Boot Starter Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

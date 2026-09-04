@@ -12,7 +12,7 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        "[format_sql]": true
 
   sql:
     init:
@@ -37,6 +37,6 @@ jwt:
 
 logging:
   level:
-    com.tibame: INFO
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
+    "[com.tibame]": INFO
+    "[org.springframework.web]": WARN
+    "[org.hibernate.SQL]": WARN
