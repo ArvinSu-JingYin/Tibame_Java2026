@@ -4,11 +4,13 @@ on:
   pull_request:
     branches:
       - main
+      - dev
     types:
       - opened
       - synchronize
       - reopened
       - edited
+  workflow_dispatch:
 
 jobs:
   pr-compliance:
@@ -38,11 +40,13 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           BASE_REF: ${{ github.base_ref }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           node -e '
           const { execSync } = require("child_process");
           const prTitle = process.env.PR_TITLE || "";
           const baseRef = process.env.BASE_REF || "main";
+          const eventName = process.env.EVENT_NAME || "";
 
           const CONVENTIONAL_REGEX = /^(feat|fix|refactor|perf|test|style|docs|chore|revert)\((controller|service|repository|entity|dto|config|security|exception|view|common|build|specs)\): .*[一-龥].*$/u;
 
@@ -71,8 +75,12 @@ jobs:
             console.log(`[PASS] ${name}: "${trimmed}"`);
           }
 
-          console.log("=== 正在校驗 PR 標題 ===");
-          validate("PR Title", prTitle);
+          if (eventName === "pull_request") {
+            console.log("=== 正在校驗 PR 標題 ===");
+            validate("PR Title", prTitle);
+          } else {
+            console.log("非 PR 事件（如手動觸發 workflow_dispatch），略過 PR 標題校驗。");
+          }
 
           console.log("\n=== 正在校驗 PR 提交歷史 (Commit Messages) ===");
           let commits = [];

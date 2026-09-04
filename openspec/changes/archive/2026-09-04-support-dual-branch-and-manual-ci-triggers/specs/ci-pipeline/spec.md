@@ -1,8 +1,4 @@
-## Purpose
-
-Defines repository continuous integration (CI) workflows, automated quality gatekeepers, commit message convention enforcement with Traditional Chinese requirements, OpenSpec specification validation, fast unit testing gates, and deep integration testing with Playwright browser caching and artifact preservation.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Pull Request Compliance and Convention Gatekeeper
 The CI system SHALL enforce pull request title, commit history, and specification consistency quality gates on all pull request events targeting the `main` or `dev` branches, and SHALL support manual execution via `workflow_dispatch` with defensive bypass of PR title validation.
@@ -44,10 +40,3 @@ The CI system SHALL execute comprehensive integration testing, Playwright end-to
 #### Scenario: Playwright browser cache miss recovery
 - **WHEN** changes are pushed to `main` or `dev`, or the workflow is dispatched manually via `workflow_dispatch`, and the Playwright browser cache is missing or invalidated
 - **THEN** the CI job MUST trigger `./mvnw exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps chromium"` to install the browser and its Linux OS dependencies before executing verification
-
-### Requirement: CI Test Report and Artifact Archival
-The CI system SHALL collect and preserve test reports and build outputs as build artifacts for auditing and post-failure diagnostics.
-
-#### Scenario: Always upload test reports on success or failure
-- **WHEN** the `main-verify` job completes execution (regardless of whether tests succeeded or failed)
-- **THEN** the CI workflow MUST upload `target/surefire-reports/` and `target/failsafe-reports/` to GitHub Artifacts with a retention policy of at least 7 days
