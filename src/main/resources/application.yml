@@ -39,8 +39,8 @@ spring:
       static-locations: classpath:/static/
 
 jwt:
-  secret: SwissLedgerSecureJwtKeyForDailyAccountBookSystem2026!#SwissLedger2026
-  expiration-ms: 86400000 # 24 hours in milliseconds
+  secret: ${JWT_SECRET:SwissLedgerSecureJwtKeyForDailyAccountBookSystem2026!#SwissLedger2026}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours in milliseconds
 
 logging:
   level:

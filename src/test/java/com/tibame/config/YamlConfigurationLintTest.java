@@ -24,6 +24,7 @@ class YamlConfigurationLintTest {
 
     private final List<String> targetYamlPaths = List.of(
         "src/main/resources/application.yml",
+        "src/main/resources/application-mssql.yml",
         "src/test/resources/application-test.yml"
     );
 
