@@ -41,6 +41,10 @@ docs/
 │
 ├── README.md                                               <-- 本文件：頂層導航中樞、檢索地圖與治理標準
 │
+├── brief/                                                  <-- [架構簡報與全景報告軌] 系統全景架構與 Harness 深度簡報
+│   ├── README.md                                           (簡報目錄索引)
+│   └── daily_ledger_system_harness_and_feature_brief.md    (工作區 Harness 工程架構與專案功能深度說明報告)
+│
 ├── explorations/                                           <-- [探索文件軌] 思考演進、技術調研、歷史大文件
 │   ├── system_exploration_report.md                        (系統架構與瑞士風格視覺選型探索)
 │   ├── modular_crypto_and_pqc_design_exploration.md       (密碼管理與抗量子密碼學架構探索)
