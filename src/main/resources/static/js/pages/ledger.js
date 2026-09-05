@@ -9,6 +9,19 @@
 
     createApp({
         setup() {
+            // Tab navigation state
+            const activeTab = ref('entry'); // 'entry' | 'history' | 'analytics' | 'categories'
+
+            const switchTab = (tabName) => {
+                activeTab.value = tabName;
+                if (tabName === 'entry') {
+                    Vue.nextTick(() => {
+                        const el = document.getElementById('quickAmountInput');
+                        if (el) el.focus();
+                    });
+                }
+            };
+
             // User state
             const currentUser = ref({});
 
@@ -74,7 +87,6 @@
 
             // Edit Modal state
             let editModalInstance = null;
-            let categoryModalInstance = null;
             const savingRecord = ref(false);
             const editForm = reactive({
                 id: null,
@@ -241,7 +253,9 @@
                     newRecord.amount = null;
                     newRecord.description = '';
 
-                    await Promise.all([loadSummary(), loadRecords(pageInfo.number)]);
+                    // 記帳成功後平滑自動流轉至「02 交易明細」分頁並更新數據
+                    activeTab.value = 'history';
+                    await Promise.all([loadSummary(), loadRecords(0)]);
                 } catch (err) {
                     console.error('Create record failed:', err);
                 } finally {
@@ -264,6 +278,8 @@
                     window.SwissAlert.toast('智能解析入帳成功');
                     smartInputText.value = '';
 
+                    // 記帳成功後平滑自動流轉至「02 交易明細」分頁並更新數據
+                    activeTab.value = 'history';
                     await Promise.all([loadSummary(), loadRecords(0)]);
                 } catch (err) {
                     console.error('Quick record failed:', err);
@@ -327,12 +343,9 @@
                 }
             };
 
-            // Category modal
+            // Category navigation
             const openCategoryModal = () => {
-                if (!categoryModalInstance) {
-                    categoryModalInstance = new bootstrap.Modal(document.getElementById('categoryModal'));
-                }
-                categoryModalInstance.show();
+                switchTab('categories');
             };
 
             const handleCreateCategory = async () => {
@@ -415,9 +428,16 @@
                 await fetchUserProfile();
                 await loadCategories();
                 await Promise.all([loadSummary(), loadRecords(0)]);
+
+                Vue.nextTick(() => {
+                    const el = document.getElementById('quickAmountInput');
+                    if (el) el.focus();
+                });
             });
 
             return {
+                activeTab,
+                switchTab,
                 currentUser,
                 currentYear,
                 currentMonth,

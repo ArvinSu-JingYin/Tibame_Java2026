@@ -401,3 +401,123 @@ body.swiss-body {
     background-color: var(--swiss-income);
     color: var(--swiss-white);
 }
+
+/* Swiss Tabs Navigation */
+.swiss-tabs-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-bottom: 2px solid var(--swiss-black);
+    margin-bottom: 2rem;
+    background-color: var(--swiss-white);
+}
+
+.swiss-tab-btn {
+    border: 1px solid var(--swiss-black);
+    border-bottom: none;
+    background-color: var(--swiss-white);
+    color: var(--swiss-black);
+    font-family: var(--swiss-font-mono);
+    font-weight: 700;
+    font-size: 0.875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-right: -1px;
+    margin-bottom: -2px;
+}
+
+.swiss-tab-btn:hover {
+    background-color: #f1f3f5;
+    color: var(--swiss-black);
+}
+
+.swiss-tab-btn.active {
+    background-color: var(--swiss-black);
+    color: var(--swiss-white) !important;
+    border-bottom: 2px solid var(--swiss-black);
+    position: relative;
+    z-index: 2;
+}
+
+.swiss-tab-btn.active .swiss-tab-index {
+    color: var(--swiss-red);
+}
+
+.swiss-tab-index {
+    font-weight: 900;
+    color: var(--swiss-grey);
+}
+
+/* Focus Entry Container & Controls */
+.swiss-focus-card {
+    background-color: var(--swiss-white);
+    border: 2px solid var(--swiss-black);
+    padding: 2rem;
+    max-width: 880px;
+    margin: 0 auto 2rem auto;
+}
+
+.swiss-amount-input-group {
+    border: 2px solid var(--swiss-black);
+    display: flex;
+    align-items: stretch;
+}
+
+.swiss-amount-prefix {
+    background-color: var(--swiss-bg);
+    color: var(--swiss-black);
+    font-family: var(--swiss-font-mono);
+    font-weight: 900;
+    font-size: 1.5rem;
+    padding: 0.75rem 1.25rem;
+    border-right: 2px solid var(--swiss-black);
+    display: flex;
+    align-items: center;
+}
+
+.swiss-amount-input {
+    border: none !important;
+    font-family: var(--swiss-font-mono);
+    font-size: 2rem;
+    font-weight: 800;
+    padding: 0.5rem 1.25rem;
+    width: 100%;
+    outline: none;
+    color: var(--swiss-black);
+    background-color: var(--swiss-white);
+}
+
+.swiss-amount-input:focus {
+    background-color: #fffdf5;
+}
+
+/* Mode Switch Tabs inside Entry */
+.swiss-entry-mode-switch {
+    display: inline-flex;
+    border: 1px solid var(--swiss-black);
+    margin-bottom: 1.5rem;
+}
+
+.swiss-entry-mode-btn {
+    border: none;
+    background: transparent;
+    padding: 0.45rem 1.25rem;
+    font-family: var(--swiss-font-mono);
+    font-weight: 700;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.swiss-entry-mode-btn.active {
+    background-color: var(--swiss-black);
+    color: var(--swiss-white);
+}
+

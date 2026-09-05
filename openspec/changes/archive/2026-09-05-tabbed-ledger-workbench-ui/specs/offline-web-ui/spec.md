@@ -1,33 +1,4 @@
-## Purpose
-
-Renders a self-hosted, strictly offline (No-CDN) single-page web interface following Swiss Design Style aesthetics for personal financial management.
-
-## Requirements
-
-### Requirement: Strict Offline Asset Delivery
-The system SHALL serve all UI dependencies, styles, scripts, and fonts locally from the application server without making any external CDN network requests.
-
-#### Scenario: Application loading in an offline or air-gapped network environment
-- **WHEN** a browser client opens the web application without an active internet connection
-- **THEN** all JavaScript libraries (Vue 3, Bootstrap 5.3, Axios, SweetAlert2) and CSS styles MUST load successfully from local static directories (`/lib/`) with zero network failures
-
-### Requirement: Swiss International Typographic Style Aesthetics
-The user interface SHALL strictly implement Swiss Design Style principles featuring structured grid layouts, bold sans-serif typography, high-contrast monochrome tones with signature Swiss Red (`#DC2626`) accents, and geometric sharp borders.
-
-#### Scenario: Visual presentation of components and cards
-- **WHEN** any page or UI component is rendered
-- **THEN** the elements MUST display with solid geometric borders (1px/2px solid), crisp contrast, clear typographic hierarchy, and uppercase section indexing (e.g., `SYS-LEDGER // 01`)
-
-### Requirement: Authentication Page and State Management
-The web UI SHALL provide an interactive login and registration interface with client-side validation, JWT persistence in localStorage, and automatic Axios authorization header injection.
-
-#### Scenario: User submits login form on authentication view
-- **WHEN** a user enters valid login credentials and submits
-- **THEN** the Vue application MUST call the login API via Axios, store the returned JWT token, and seamlessly transition the view to the Ledger Workbench
-
-#### Scenario: Handling unauthenticated or expired session
-- **WHEN** an API call returns a 401 Unauthorized status via Axios response interceptor
-- **THEN** the client MUST clear stored credentials, alert the user via SweetAlert2, and redirect to the login screen
+## ADDED Requirements
 
 ### Requirement: Tabbed Workbench Navigation and Category Management
 The ledger workbench SHALL provide a Swiss-style geometric tab navigation system supporting four distinct workspaces (`01 記帳錄入`, `02 交易明細`, `03 財務概覽`, `04 分類管理`), with category management presented as a full-width dedicated tab view instead of a modal dialog.
@@ -39,6 +10,8 @@ The ledger workbench SHALL provide a Swiss-style geometric tab navigation system
 #### Scenario: Managing categories in full-width dedicated tab
 - **WHEN** an authenticated user switches to the `04 分類管理` tab
 - **THEN** the application MUST render the flat table listing system-protected and user-defined categories with inline creation form and delete actions for user-defined categories
+
+## MODIFIED Requirements
 
 ### Requirement: Central Quick-Entry Search Bar Experience
 The ledger workbench SHALL feature a dedicated Focus Quick-Entry workspace (`01 記帳錄入`) as the default post-login landing view, enabling rapid, distraction-free transaction logging with automatic autofocus and seamless auto-transition to transaction history upon submission.
