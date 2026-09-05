@@ -43,7 +43,8 @@ docs/
 │
 ├── brief/                                                  <-- [架構簡報與全景報告軌] 系統全景架構與 Harness 深度簡報
 │   ├── README.md                                           (簡報目錄索引)
-│   └── daily_ledger_system_harness_and_feature_brief.md    (工作區 Harness 工程架構與專案功能深度說明報告)
+│   ├── daily_ledger_system_harness_and_feature_brief_v2.0.md (工作區 Harness 工程架構與專案功能深度說明報告 v2.0 最新版)
+│   └── daily_ledger_system_harness_and_feature_brief.md    (工作區 Harness 工程架構與專案功能深度說明報告 v1.0 歷史存檔)
 │
 ├── explorations/                                           <-- [探索文件軌] 思考演進、技術調研、歷史大文件
 │   ├── system_exploration_report.md                        (系統架構與瑞士風格視覺選型探索)
